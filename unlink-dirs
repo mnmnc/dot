@@ -1,0 +1,21 @@
+#!/bin/sh
+
+scriptDir=$(dirname `realpath -P "$0"`)
+
+if grep -qs "${scriptDir}/files/app" /proc/mounts; then
+  umount "${scriptDir}/files/app"
+fi
+
+if grep -qs "${scriptDir}/files/exe" /proc/mounts; then
+  umount "${scriptDir}/files/exe"
+fi
+
+#if grep -qs "${scriptDir}/files/iod" /proc/mounts; then
+#  umount "${scriptDir}/files/iod"
+#fi
+
+if grep -qs "${scriptDir}/files/usr" /proc/mounts; then
+  umount "${scriptDir}/files/usr"
+fi
+
+rmdir "${scriptDir}/files/app" "${scriptDir}/files/exe" "${scriptDir}/files/usr" # "${scriptDir}/files/iod"

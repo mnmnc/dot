@@ -1,0 +1,192 @@
+/dev/sda1
+  ├── boot
+
+/dev/sda2
+  ├── Luks
+      ├── LVM
+          ├── copy (35GB) (LVM copy of void)
+          ├── data (rem % space)
+              ├── amazon
+				        ├── anon (mount to /home/<user>/usr/acd)
+              ├── bak
+                  ├── system
+                  ├── users
+    			    ├── gui ## (mount to /gui)
+              ├── users (mount to /home)
+                  ├── anon
+                  ├── root ## (mount to /root)
+              ├── share ## (mount to /shr)
+                  ├── cnt (containers)
+                  ├── pls (playlists)
+                  ├── smb (samba)
+                  ├── sng (songs)
+                  ├── vms (virtual machines)
+              ├── trash ## (mount to /trsh)
+          ├── swap (4GB)
+          ├── void (35GB) (mount to /)
+              ├── /bin
+              ├── /etc
+              ├── /usr
+              ├── /var
+/dev/sdb1
+  ├── bkp
+    ├── user-configs/<date><time>@<hostname>
+        ├── /home/<user>/app/cnf
+    ├── user-data/<date><time>@<hostname>
+        ├── /home/<user>/app/dat
+        ├── /home/<user>/app/log
+        ├── /home/<user>/exe
+        ├── /home/<user>/src
+        ├── /home/<user>/usr
+    ├── system-configs/<date><time>@<hostname>
+        ├── /etc
+        ├── /var
+    ├── system-data/<date><time>@<hostname>
+        ├── /usr
+        ├── /var/log
+        ├── boot-image.iso
+        ├── luks-header
+        ├── luks-key
+        ├── lvm-header
+  
+/home/<user>/ [0700]
+  ├── app (applications)
+      ├── cnf (config)
+      ├── dat (data)
+      ├── log (logs)
+      ├── skl (skeleton)
+  ├── exe
+      ├── bin (binaries)
+      ├── msc (misc)
+      ├── run (user login progs)
+  ├── iod (input & output documents)
+  	  ├── bkp (backup)
+  		    ├── borg -> $BAK_DIR (/dev/sdb1)
+  	  ├── ftp (transfer)
+  		    ├── sftp -> $FTP_HOST
+  	  ├── prt (print)
+  		    ├── lp * $PRT_DEV
+  	  ├── scn (scanned)
+  		    ├── scanimage $SCN_DEV
+  	  ├── tsh (trash)
+  		    ├── mv -> $TSH_DIR (/trsh)
+  ├── src (source)
+      ├── dev (development)
+      ├── pkg (packages)
+  ├── usr (user)
+  	  ├── acd (Amazon Cloud Drive)
+    		  ├── user-configs
+    		  ├── user-data
+    		  ├── system-configs
+    		  ├── system-data
+      ├── doc (documents)
+          ├── prv (private)
+          ├── pub (public)
+          ├── tpl (templates)
+          ├── wrk (work)
+      ├── ipr (ipfs repository)
+      ├── mls (mails)
+          ├── prv (private)
+          ├── pub (public)
+          ├── tpl (templates)
+          ├── wrk (work)
+      ├── med (media)
+          ├── aud (audio)
+              ├── imp (import)
+              ├── pls (playlists) --> /data/share/pls
+              ├── rec (recorded)
+              ├── sng (songs) --> /data/share/sng
+          ├── img (images)
+              ├── msc (misc)
+              ├── rec (recorded)
+              ├── wpr (wallpaper)
+          ├── mov (movies)
+              ├── cin (cinema)
+              ├── msc (misc)
+              ├── rec (recorded)
+              ├── ser (series)
+      ├── pub (public)    
+      ├── tmp (temporary)
+          ├── dls (downloads)
+        
+/gui
+  ├── lib (libraries)
+      ├── stp
+          ├── menu
+              ├── dm-ex
+              ├── dm-fm
+              ├── dm-mp
+              ├── dm-pw
+          ├── paste
+              ├── pb-ad
+              ├── pb-dl
+              ├── bp-ls
+          ├── info
+          ├── scpy (screen copy)
+          ├── srec (screen recording)
+      ├── thm
+          ├── load-theme
+          ├── comp-theme (compile)
+          ├── extr-theme (from wallpaper)
+          ├── prev-theme (preview)
+  ├── rpt (repository)
+    ├── stp (setups)
+      ├── bsc
+        # - USES - ##################
+        # WM: bspwm                 #
+        # Display: xrandr, redshift #
+        # Statusbar: lemonbar       #
+        # Menu: dmenu               #
+        # Popups: dunst             #
+        # Hotkeys: sxhkd            #
+        # Compositor: compton       #
+        # Lock: physlock            #
+        # ------------------------- #
+          |-- exe
+          |-- run
+             |-- displays
+          ├── conf
+          ├── init
+          ├── shell
+    ├── thm (themes)
+        ├── def (default)
+            ├── col.sh
+            ├── cnf.sh
+            ├── init.sh
+        ├── ldd (loaded)
+            ├── col.sh -> /gui/thm/def/col.sh
+            ├── cnf.sh -> /gui/thm/def/cnf.sh
+            ├── cmp (compiled)
+            ├── dsk (desktop image)
+            ├── thm (theme name)
+            ├── prv (preview)
+
+################################################################
+
+/man [0511]
+  http://www.pathname.com/fhs/2.2/fhs-4.11.html
+  export MANPATH='/man/sys:/man/usr'
+  ├── sys (symlink to /usr/share/man)
+  ├── usr (user documentation)
+
+
+/var/db/xbps (xbps package database)
+/var/cache/xbps (xbps package cache)
+
+/etc/iod.conf (iod config)
+/var/log/iod (iod logs)
+/usr/bin/iod-[bkp,ftp,prt,scn,tsh] (iod exec)
+
+Shell: mksh https://www.mirbsd.org/mksh.htm
+
+~/.bashrc -> ~/app/cnf/bashrc
+~/.xinitrc -> ~/app/cnf/xinitrc
+
+Login:
+bashrc -> startx
+xinitrc -> /gui/lib/stp x <name> <theme>
+stp
+ -> Compile theme from ~/app/skl to ~/app/cnf
+ -> Load config /gui/rpt/stp/<name>/conf
+ -> Init setup /gui/rpt/stp/<name>/init
+ -> Load setup /gui/rpt/stp/<name>/run/*

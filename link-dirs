@@ -1,0 +1,21 @@
+#!/bin/sh
+
+scriptDir=$(dirname `realpath -P "$0"`)
+
+mkdir -p "${scriptDir}/files/app" "${scriptDir}/files/exe" "${scriptDir}/files/usr" # "${scriptDir}/files/iod"
+
+if ! grep -qs "${scriptDir}/files/app" /proc/mounts; then
+  mount --bind "/home/$(logname)/app" "${scriptDir}/files/app"
+fi
+
+if ! grep -qs "${scriptDir}/files/exe" /proc/mounts; then
+  mount --bind "/home/$(logname)/exe" "${scriptDir}/files/exe"
+fi
+
+#if ! grep -qs "${scriptDir}/files/iod" /proc/mounts; then
+#  mount --bind "/home/$(logname)/iod" "${scriptDir}/files/iod"
+#fi
+
+if ! grep -qs "${scriptDir}/files/usr" /proc/mounts; then
+  mount --bind "/home/$(logname)/usr" "${scriptDir}/files/usr"
+fi
