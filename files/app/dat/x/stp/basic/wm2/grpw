@@ -1,0 +1,60 @@
+#!/usr/bin/env sh
+
+test -d "${WM_GROUPS}" || mkdir -p "${WM_GROUPS}"
+
+if test $# -ge 2; then
+  grpFile="${WM_GROUPS}/${1}"
+  grpStat="${WM_GROUPS}/${1}.state"
+  grpAct="${2}"
+  shift; shift;
+else
+  grpAct="${1:-cln}"
+fi
+
+case "${grpAct}" in
+  tog)
+    test ! -f "${grpStat}" && exit 1
+    status=$(cat "${grpStat}")
+    if test "${status}" = "visible"; then
+      while read winID; do
+        echo "${winID}"
+        mapw -u "${winID}"
+      done < "${grpFile}"
+      printf 'hidden' > "${grpStat}"
+    else
+      while read winID; do
+        mapw -m "${winID}"
+      done < "${grpFile}"
+      printf 'visible' > "${grpStat}"
+    fi
+    exit
+    ;;
+  des)
+    rm "${grpFile}" "${grpStat}"
+    exit
+    ;;
+  cln)
+    for grp in $(cd "${WM_GROUPS}"; find -name "[0-9]" | tr -d './'); do
+      while read winID; do
+        wattr "${winID}" || grpw "${grp}" del "${winID}"
+      done < "${WM_GROUPS}/${grp}"
+    done
+    exit
+    ;;
+esac
+
+while test $# -gt 0; do
+  winID="$1"; shift
+  case "${grpAct}" in
+    add)
+      if ! test -f "${grpFile}" || ! grep -q "${winID}" "${grpFile}"; then
+        printf '%s\n' "${winID}" >> "${grpFile}"
+      fi
+      test ! -f "${grpStat}" && printf 'visible' > "${grpStat}"
+      ;;
+    del)
+      sed -i "0,/${winID}/d" "${grpFile}"
+      test ! -s "${grpFile}" && rm "${grpFile}" "${grpStat}"
+      ;;
+  esac
+done

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+#printf 'Starting Window-Manager ...\n' | tee -a ~/.xinit.log
+#test "${DRY_RUN}" = 'n' && howm -c "${HOME}/app/cnf/howm/howmrc" &
+#test "${DRY_RUN}" = 'n' && bspwm -c "${HOME}/app/cnf/bspwm/bspwmrc" &
+test "${DRY_RUN}" = 'n' && (wew | roxe &)

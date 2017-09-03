@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+
+#printf 'Setting bg color ...\n' tee -a ~/.xinit.log
+#( xsetroot -solid "$(xrdb -q | grep '*.background' | sed 's|.*background:||g' | xargs)" ) &
+
+#printf 'Setting bg image ...\n' | tee -a ~/.xinit.log
+#( sleep 1; feh --bg-fill "${HOME}/app/dat/x/thm/${THEME_NAME}/dsk" ) &
+
+#[[ ! -d "${WM_GROUPS}" ]] && mkdir -p "${WM_GROUPS}"
+#[[ ! -d "${WM_WINDOWS}" ]] && mkdir -p "${WM_WINDOWS}"
+#[[ ! -d "${WM_BACKUPS}" ]] && mkdir -p "${WM_BACKUPS}"
+#[[ ! -d "${WM_TAGS}" ]] && mkdir -p "${WM_TAGS}"
+#[[ ! -f "${WM_WINFS}" ]] && touch "${WM_WINFS}"

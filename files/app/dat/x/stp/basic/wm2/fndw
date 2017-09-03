@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+
+export curID=$(pfw || echo 'NONE')
+export winID=""
+
+case "${1}" in
+  pos) # by position
+    case "${2}" in
+      l) winID=$(lsw | xargs wattr xi | sort -nr | sed "0,/${curID}/d" | sed "1s/^[0-9]* //p;d");;
+      r) winID=$(lsw | xargs wattr xi | sort -n | sed "0,/${curID}/d" | sed "1s/^[0-9]* //p;d");;
+      u) winID=$(lsw | xargs wattr yi | sort -nr | sed "0,/${curID}/d" | sed "1s/^[0-9]* //p;d");;
+      d) winID=$(lsw | xargs wattr yi | sort -n | sed "0,/${curID}/d" | sed "1s/^[0-9]* //p;d");;
+    esac
+    ;;
+  his) # by history
+    case "${2}" in
+      n) winID=$(lsw | grep -v "${curID}" | sed '1 p;d');;
+      p) winID=$(lsw | grep -v "${curID}" | sed '$ p;d');;
+      f) winID=$(lsw | head -n 1);;
+      l) winID=$(lsw | tail -n 1);;
+    esac
+    ;;
+  *) exit 1;;
+esac
+
+export winID="${winID}"

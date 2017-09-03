@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+
+if echo "${1}" | grep -q '0x'; then
+  curID=$(pfw || echo 'NONE')
+  winID="${1}"
+else
+  . fndw "$@" || exit 1
+fi
+
+# check that window exists and shouldn't be ignored
+wattr "${winID}" || return
+wattr o "${winID}" && return
+
+set_border() {
+  rootWin=$(lsw -r)
+  rootW=$(wattr w "${rootWin}")
+  rootH=$(wattr h "${rootWin}")
+
+  rootW=$((rootW - PAD_LEFT - PAD_RIGHT))
+  rootH=$((rootH - PAD_TOP - PAD_BOT))
+  if test "$(wattr wh $2)" = "${rootW} ${rootH}"; then
+    chwb -s 0 -c $(echo "0x$1" | tr -d '#') "$2"
+  else
+    chwb -s "${WIN_BORDER}" -c $(echo "0x$1" | tr -d '#') "$2"
+  fi
+}
+
+wattr "${curID}" && set_border "${WIN_INACTIVE}" $curID # inactivate border on old window
+wtf $winID # set focus on it
+#wmp -a $(wattr xy $(pfw)) # move mouse
+chwso -r $winID # raise windows
+set_border "${WIN_ACTIVE}" $winID # active border on new window

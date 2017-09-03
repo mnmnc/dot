@@ -1,0 +1,11 @@
+#!/bin/sh
+# depends: bc, mktemp, curl, convert, sort, gawk, printf, cut, tr, tail, head
+
+scriptDir=$(dirname `realpath -P "$0"`)
+scriptName=$(basename $0)
+
+pat="${1:-Something}"
+
+[[ ! -f "${PWD}/col.sh" ]] && printf 'No colors found ...\n' && exit 1
+
+printf 'Generating pattern ...\n'

@@ -1,0 +1,7 @@
+#!/bin/sh
+# dots-unlink-dirs
+
+scriptDir=$(dirname `realpath -P "$0"`)
+parentDir=$(dirname "${scriptDir}")
+
+grep -qs "${parentDir}/files/app" /proc/mounts && umount "${parentDir}/files/app" && rmdir "${parentDir}/files/app" 

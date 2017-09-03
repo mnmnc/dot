@@ -1,0 +1,5 @@
+#!/bin/sh
+
+#printf 'Cleaning logs ...\n' | tee -a ~/.xinit.log
+printf '' > ~/app/log/dmenu/dm-ex.log
+printf '' > ~/app/log/dmenu/dm-fm.log

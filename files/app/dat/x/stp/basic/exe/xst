@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Add xft font from Xresources
+st -f "$(xrdb -q "${xConf}" | grep font | head -n1 | sed 's|.*font:.*xft:||g; s|,style=.*||g' | xargs)" "${@}" 

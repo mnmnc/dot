@@ -1,0 +1,317 @@
+#!/bin/sh
+
+# http://fontawesome.io/cheatsheet/
+
+addToCache() {
+  grep -q "${1}" "${PANEL_CACHE}" && return 1
+  printf '%s\n' "${1}" >> "${PANEL_CACHE}"
+}
+
+delFromCache() {
+  ! grep -q "${1}" "${PANEL_CACHE}" && return 1
+  sed -i "\~${1}~d" "${PANEL_CACHE}"
+}
+
+test -p "${PANEL_FIFO}" && rm -f "${PANEL_FIFO}"
+mkfifo "${PANEL_FIFO}" && trap "rm -f ${PANEL_FIFO}" EXIT
+
+eval "$(x2v)"
+
+sleep 0.01
+
+while :; do
+  while read -r line; do
+    part=$(printf '%s' "${line}" | cut -c 1-2)
+    val=$(printf '%s' "${line}" | cut -c 4-)
+
+    #if test "${part}" = 'de'; then
+    #  part='DE'
+    #  val=$(xprop -root _NET_CURRENT_DESKTOP | awk '{print $3+1}')
+    #fi
+
+    case "${part}" in
+      'BT') # battery
+        if test "${val}" -le 10; then
+          btStr="%{F${base09}}%{F-} "
+          if addToCache "${part}"; then
+            notify-send -u 'critical' " ${val}%"
+          fi
+        else
+          btStr=""
+          if delFromCache "${part}"; then
+            notify-send -u 'normal' " ${val}%"
+          fi
+        fi;;
+      'CL') # clock
+          clStr=$(date +%R)
+          min=$(date +%M | sed 's/^0*//')
+          test "$((min % 5))" -eq 0 && notify-send -u low " $(date +%R)"
+          ;;
+      'CT') # cpu temperature
+          if test "${val}" -ge 75; then
+            ctStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'critical' " ${val}°C"
+            fi
+          else
+            ctStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'normal' " ${val}°C"
+            fi
+          fi
+          ;;
+      'CU') # cpu usage
+          if test "${val}" -ge 75; then
+            cuStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'critical' " ${val}%"
+            fi
+          else
+            cuStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'normal' " ${val}%"
+            fi
+          fi
+          ;;
+      #'DE') # desktop
+          #notify-send -i "${val}" -u 'low' " %I"
+          #;;
+      'DP') # display
+          notify-send -u low " ${val}"
+          ;;
+      'FW') # firewall
+          if test "${val}" -eq 0; then
+            fwStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'critical' " off"
+            fi
+          else
+            fwStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'normal' " on"
+            fi
+          fi
+          ;;
+      'GT') # graphic card temperature
+          if test "${val}" -ge 75; then
+            gtStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'critical' " ${val}°C"
+            fi
+          else
+            gtStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'normal' " ${val}°C"
+            fi
+          fi
+          ;;
+      'KL') # keyboard layout
+          notify-send -i "${val}" -u low " %I"
+          ;;
+      'LD') # workload
+          if test "${val}" -ge 200; then
+            ldStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'critical' " ${val}%"
+            fi
+          else
+            ldStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'normal' " ${val}%"
+            fi
+          fi
+          ;;
+      'MC') # microhpone activitiy
+          if test "${val}" -eq 1; then
+            mcStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'normal' " rec"
+            fi
+          else
+            mcStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'low' " off"
+            fi
+          fi
+          ;;
+      'MS') # music playback
+          notify-send -u 'low' " ${val}"
+          ;;
+      'PK') # package updates
+          if test "${val}" -ge 10; then
+            pkStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'critical' " ${val}"
+            fi
+          else
+            pkStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'normal' " ${val}"
+            fi
+          fi
+          ;;
+      'RM') # ram space
+          if test "${val}" -ge 90; then
+            rmStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'critical' " ${val}%"
+            fi
+          else
+            rmStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'normal' " ${val}%"
+            fi
+          fi
+          ;;
+      'RX') # received data
+          if test "${val}" -ge 5000; then
+            rxStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'normal' " ${val}kbs"
+            fi
+          else
+            rxStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'low' " ${val}kbs"
+            fi
+          fi
+          ;;
+      'SI') # SSH connections in
+          if test "${val}" -ne 0; then
+            siStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'critical' " ${val}"
+            fi
+          else
+            siStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'normal' " ${val}"
+            fi
+          fi
+          ;;
+      'SO') # SSH connections out
+          if test "${val}" -ne 0; then
+            soStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'normal' " ${val}"
+            fi
+          else
+            soStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'low' " ${val}"
+            fi
+          fi
+          ;;
+      'SP') # device space
+          dev=$(printf '%s' "${val}" | awk -F '|' '{print $1}')
+          spc=$(printf '%s' "${val}" | awk -F '|' '{print $2}')
+          if test "${spc}" -ge 90; then
+            spStr="%{F${base09}}%{F-} "
+            if addToCache "${part}|${dev}"; then
+              notify-send -u 'critical' " ${dev} ${spc}%"
+            fi
+          else
+            if delFromCache "${part}|${dev}"; then
+              notify-send -u 'normal' " ${dev} ${spc}%"
+              ! grep -q "${part}|${dev}" "${PANEL_CACHE}" && spStr=""
+            fi
+          fi
+          ;;
+      'TX') # transmitted data
+          if test "${val}" -ge 5000; then
+            txStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'normal' " ${val}kbs"
+            fi
+          else
+            txStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'low' " ${val}kbs"
+            fi
+          fi
+          ;;
+      'WC') # webcam activitiy
+          if test "${val}" -eq 1; then
+            wcStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -u 'normal' " rec"
+            fi
+          else
+            wcStr=""
+            if delFromCache "${part}"; then
+              notify-send -u 'low' " off"
+            fi
+          fi
+          ;;
+      'WL') # wlan connectivity
+          if test "${val}" -le 35; then
+            wlStr="%{F${base09}}%{F-} "
+            if addToCache "${part}"; then
+              notify-send -i "${val}%" -u 'normal' " %I"
+            fi
+          else
+            wlStr=""
+            if delFromCache "${part}"; then
+              notify-send -i "${val}%" -u 'low' " %I"
+            fi
+          fi
+          ;;
+      'WM') # windows manager
+          wmStr=''
+          for col in $(echo "${val}" | tr ':' ' '); do
+            typ=$(printf '%s' "${col}" | cut -c 1)
+            dsk=$(printf '%s' "${col}" | cut -c 2-)
+
+            # f = free desktop
+            # F = focused free desktop
+            # o = occupied desktop
+            # O = focused occupied desktop
+            # u = urgent desktop
+            # U = focused urgent desktop
+            case "${typ}" in
+              o|u) wmStr="${wmStr}${dsk} ";;
+              F|O|U) wmStr="${wmStr}%{F${base09}}${dsk}%{F-} ";;
+            esac
+
+            #notify-send -i "${val}" -u 'low' " %I"
+          done
+          ;;
+      'WT') # weather
+          wtType=$(printf '%s' "${val}" | awk -F '|' '{print $1}')
+          wtTemp=$(printf '%s' "${val}" | awk -F '|' '{print $2}')
+          wtIcon=''
+          case "${wtType}" in
+            Clear) wtIcon="";;
+            Fog) wtIcon="";;
+            Clouds) wtIcon="";;
+            Rain) wtIcon=" ";;
+            Snow) wtIcon="";;
+            Storm) wtIcon="";;
+          esac
+          wtStr="%{F${base09}}${wtIcon} ${wtTemp}°C%{F-} "
+          notify-send -u 'low' "${wtIcon} ${wtTemp}°C"
+          ;;
+      'VL') # volume
+          status=$(amixer get Master | grep -o -w 'o[nf]*')
+          if test "${status}" = 'off' || test "${val}" -eq 0; then
+            vlStr="%{F${base09}}%{F-} "
+            notify-send -t 500 -i "mute" -u 'low' " %I"
+          else
+            vlStr=""
+            notify-send -t 500 -i "${val}%" -u 'low' " %I"
+          fi
+          ;;
+    esac
+    lftStr=""
+    cenStr="${btStr}${ctStr}${cuStr}${fwStr}${gtStr}${ldStr}${mcStr}${pkStr}${rmStr}${spStr}${siStr}${soStr}${rxStr}${txStr}${wcStr}"
+    rgtStr=""
+    printf '%s\n' "%{l}${lftStr}%{c}${cenStr}%{r}${rgtStr}"
+
+    #spw=$(xwininfo -name 'sp' 2>/dev/null | grep -o '0x[0-9a-zA-Z]*' | head -n 1)
+    #if test "${cenStr}" = ''; then
+    #  test "${spw}" != '' && bspc node "${spw}" -g hidden=on && bspc config top_padding 0
+    #else
+    #  test "${spw}" != '' && bspc node "${spw}" -g hidden=off && bspc config top_padding 20
+    #fi
+  done < "${PANEL_FIFO}"
+done | xlb -p -n 'sp'

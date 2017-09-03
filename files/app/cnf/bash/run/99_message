@@ -1,0 +1,70 @@
+#!/bin/sh
+
+command_not_found_handle() {
+  >&2 echo '
+  ┌──────────────────┐
+  │ Unknown command! │
+  └──────────────────┘
+  The command '"${1}"' in '"${0}"' is unknown.
+'
+  return 127
+}
+
+export -f command_not_found_handle
+
+shell_prompt_handle() {
+  rc=$?
+  bn=$(basename "${PWD}")
+
+  # If PWD is directly under root (/),
+  # also display the /
+  if test "${PWD}" == "/${bn}"; then
+    bn="${PWD}"
+  fi
+
+  PS1="\n"
+  case "${PWD}" in
+      /bin*|/boot*|/dev*|/etc*|/lib*|/lost+found*|/mnt*|/proc*|/run*|/sbin|/sys*|/usr*|/var*)
+        PS1+=" ° "
+        ;;
+      /home*)
+        PS1+=" ~ "
+        ;;
+      /root*)
+        PS1+=" # "
+        ;;
+      *)
+        PS1+=" : "
+        ;;
+  esac
+
+  PS1+="\[\e[0;33m\]${bn}\[\e[0m\]"
+
+  test "${rc}" -eq 0 && PS1+=" $ " || PS1+=" ! "
+}
+
+export -f shell_prompt_handle
+
+export PROMPT_COMMAND='shell_prompt_handle'
+
+prompt_message_handle() {
+  clear
+
+  cat <<EOF
+
+    Welcome to
+   __     __    _     _   _     _ 
+   \ \   / /__ (_) __| | | |   (_)_ __  _   ___  __
+    \ \ / / _ \| |/ _' | | |   | | '_ \| | | \ \/ /
+     \ V / (_) | | (_| | | |___| | | | | |_| |>  < 
+      \_/ \___/|_|\__,_| |_____|_|_| |_|\__,_/_/\_\\
+
+        # $(date +"%x %X") - ${USER} @ ${HOSTNAME}
+EOF
+}
+
+export -f prompt_message_handle
+
+if test -z "${DISPLAY}"; then
+  prompt_message_handle
+fi

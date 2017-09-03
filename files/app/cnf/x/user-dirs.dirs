@@ -1,0 +1,8 @@
+XDG_DESKTOP_DIR="$HOME/usr/dsk"
+XDG_DOCUMENTS_DIR="$HOME/usr/doc"
+XDG_DOWNLOAD_DIR="$HOME/tmp/dls"
+XDG_MUSIC_DIR="$HOME/usr/med/aud/sng"
+XDG_PICTURES_DIR="$HOME/usr/med/img"
+XDG_PUBLICSHARE_DIR="$HOME/usr/pub"
+XDG_TEMPLATES_DIR="$HOME/usr/doc/tpl"
+XDG_VIDEOS_DIR="$HOME/usr/med/mov"

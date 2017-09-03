@@ -1,0 +1,92 @@
+#!/bin/sh
+# void-system-backup
+
+vsb_create () {
+  test -d /data || exit 1
+
+  if ! test -d /msc; then
+  	printf '[%s] Preparing cache ...\n' "$(date +'%X')"
+  	mkdir -p /msc
+  fi
+
+  if test -f /msc/lock; then
+    printf '[%s] ERROR: Cannot lock. Another backup in progress?\n' "$(date +'%X')"
+    exit 1
+  fi
+
+  if ! test -d /data/bak/system; then
+  	printf '[%s] Preparing system repo ...\n' "$(date +'%X')"
+  	mkdir -p /data/bak/system
+  	borg init /data/bak/system
+  fi
+
+  printf '[%s] Starting backup ...\n' "$(date +'%X')"
+  dateTime="$(date +'%Y%m%d-%H%M%S')"
+  printf '%s' "${dateTime}" > "/msc/lock"
+
+  if grep -qs /boot /proc/mounts; then
+    printf '[%s] Creating boot backup ...\n' "$(date +'%X')"
+    dd if=/dev/sda1 of=/msc/boot-img
+  fi
+
+  printf '[%s] Creating luks backup ...\n' "$(date +'%X')"
+  cryptsetup luksHeaderBackup /dev/sda2 --header-backup-file=/msc/luks-header
+
+  printf '[%s] Creating lvm backup ...\n' "$(date +'%X')"
+  vgcfgbackup -f /msc/lvm-config
+
+  printf '[%s] Creating package list ...\n' "$(date +'%X')"
+  xbps-query -l | awk '{print $2}' > /msc/repo-pkg.list
+
+  printf '[%s] Creating blockdevice list ...\n' "$(date +'%X')"
+  lsblk > /msc/block-devices.list
+
+  printf '[%s] Compressing backup ...\n' "$(date +'%X')"
+  tar cfz "/msc/core-cfg.tar.gz" /msc/
+
+  printf '[%s] Creating checksum ...\n' "$(date +'%X')"
+  (cd /msc && md5sum core-cfg.tar.gz > /msc/core-cfg.md5)
+
+  printf '[%s] Cleaning cache ...\n' "$(date +'%X')"
+  find /msc -type f ! -name 'core-cfg.*' -delete
+
+  if grep -qs /host /proc/mounts; then
+  	printf '[%s] Copying backup to host ...\n' "$(date +'%X')"
+  	cp /msc/* /host
+  fi
+
+  printf '[%s] Creating root fs backup ...\n' "$(date +'%X')"
+  borg create "/data/bak/system::${dateTime}" /etc /msc /root /usr /var
+
+  printf '[%s] Cleaning up ...\n' "$(date +'%X')"
+  rm -r /msc
+}
+
+vsb_list () {
+  printf '[%s] Listing available backups ...\n' "$(date +'%X')"
+  borg list '/data/bak/system'
+}
+
+vsb_mount () {
+  vsb_list
+
+  printf '[%s] Choose mount backup ...\n' "$(date +'%X')"
+  read -p ': ' answ
+}
+
+vsb_restore () {
+  vsb_list
+
+  printf '[%s] Choose restore backup ...\n' "$(date +'%X')"
+  read -p ': ' answ
+}
+
+test -z "${1}" && exit 1
+act="${1}"; shift
+
+case "${act}" in
+  c) vsb_create ${@};;
+  l) vsb_list ${@};;
+  m) vsb_mount ${@};;
+  r) vsb_restore ${@};;
+esac

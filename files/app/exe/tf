@@ -1,0 +1,91 @@
+#!/bin/sh
+
+# u = upload
+# d = download
+
+# -a: Disable tar.gz archive
+# -c: Generate checksums for files (skipped on stdin)
+# -e: Encrypt files using gpg
+# -f: Use a specific filename (for stdin)
+# -i: Use a specific ID
+# -p: Set password [WIP]
+# -s: Source ([a]uto, a[r]gs, [c]lipboard, [d]esktop, se[l]ection, [s]tdin, [w]indow)
+#     default: auto (args, stdin, desktop)
+# -v: Show progressbar on upload
+
+main() {
+  OPTIND=0
+
+  archive=1
+  checksum=0
+  encrypt=0
+  usenewid=0
+  filename=''
+  #password=''
+  progress=0
+
+  opts=""
+  files=""
+
+  while getopts "acef:i:p:v" x; do
+    case $x in
+      a) archive=0;;
+      c) checksum=1;;
+      e) encrypt=1;;
+      f) filename="${OPTARG}";;
+      i) usenewid="${OPTARG}";;
+      #p) password="${OPTARG}";;
+      v) progress=1; opts+=" --progress-bar";;
+    esac
+  done
+
+  shift $((OPTIND - 1))
+  OPTIND=0
+
+  test ! -z "${1}" && act="${1}"; shift || exit 1
+  #echo "ACT: ${act}"
+
+  if test "${act}" = 'd'; then
+    printf '[%s] Downloading ...\n' "$(date +'%X')"
+    exit
+  fi
+
+  if test -t 0; then
+    # no stdin
+    printf '[%s] Reading args ...\n' "$(date +'%X')"
+    while test $# -gt 0; do
+      fn="${1}"; shift
+      #echo "ARG: ${fn}"
+      test -f "${fn}" && files+=" ${fn}"
+    done
+  else
+    # stin
+    test -z "${filename}" && fn=$(mktemp '/tmp/tf-XXX') || fn="${filename}"
+    printf '[%s] Reading stdin ...\n' "$(date +'%X')"
+    while read stdin; do
+      #echo "STDIN: ${stdin}"
+      printf '%s\n' "${stdin}" >> "${fn}"
+    done
+    files+=" ${fn}"
+  fi
+
+  test -z "${files}" && exit 1
+
+  #echo "FILES: ${files}"
+
+  if test "${archive}" -eq 1; then
+    printf '[%s] Generating archive ...\n' "$(date +'%X')"
+    archiveFile=$(mktemp '/tmp/tf-archive-XXX.tgz')
+    tar cfz "${archiveFile}" ${files}
+    files="${archiveFile}"
+  fi
+
+  printf '[%s] Uploading ...\n' "$(date +'%X')"
+  for fn in ${files}; do
+    printf '[%s] Processing "%s" ...\n' "$(date +'%X')" "${fn}"
+    test "${encrypt}" -eq 1 && gpg # todo
+    curl ${opts} --upload-file "${fn}" "https://transfer.sh/${usenewid}"
+  done
+}
+
+main $*

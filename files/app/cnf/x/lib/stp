@@ -1,0 +1,141 @@
+#!/bin/sh
+
+scriptDir=$(dirname `realpath -P "$0"`)
+scriptName=$(basename $0)
+
+act="${1}"; shift
+stpDir="${HOME}/app/dat/x/stp"
+usrRun="${HOME}/exe/run"
+
+xcheck(){
+  t=0
+  #test "${1}" =~ '^[0-9]+$' && t="${1}" && shift
+
+  prog="${1}"; shift
+  sn=$(basename "${prog}")
+
+  # no program specified
+  test -z "${prog}" && exit 1
+
+  # program already running
+  test $(pgrep "${sn}") && exit 0
+
+  # delay program execution
+  test "${t}" -ne 0 && sleep "${t}"
+
+  ${prog} ${@}
+
+  while :; do
+    sleep 1s
+    test $(pgrep -f "${prog}") && continue
+    ${prog} ${@}
+    notify-send -u 'low' "Restarted \"${sn}\"."
+  done
+}
+
+xwait(){
+  t=0
+  #test "${1}" =~ '^[0-9]+$' && t="${1}" && shift
+
+  prog="${1}"; shift
+  sn=$(basename "${prog}")
+
+  # no program specified
+  test -z "${prog}" && exit 1
+
+  # program already running
+  test $(pgrep "${sn}") && exit 0
+
+  # delay program execution
+  test "${t}" -ne 0 && sleep "${t}"
+
+  while :; do
+    ${prog} ${@}
+    notify-send -u 'low' "Restarted \"${sn}\"."
+    sleep 1s;
+  done
+}
+
+xloop(){
+  while :; do
+    sleep 10
+  done
+}
+
+xapply(){
+  printf '[%s] Applying theme ...\n' "$(date +'%X')"
+
+  printf '[%s] Applying wallpaper ...\n' "$(date +'%X')"
+  xsetroot -solid "${base00}"
+  feh --bg-fill "${HOME}/app/dat/x/thm/${THEME_NAME}/dsk"
+
+  printf '[%s] Applying colors ...\n' "$(date +'%X')"
+  
+}
+
+xlogin(){
+  if test -z "${SETUP_NAME}" || test -z "${THEME_NAME}"; then
+    printf '[%s] Error: Please pass theme & setup ...\n' "$(date +'%X')" | tee ~/.xinit.log
+    exit 1
+  fi
+
+  printf '[%s] Starting X login ...\n' "$(date +'%X')" | tee ~/.xinit.log
+  export DRY_RUN="${DRY_RUN:-n}"
+  export xcheck xwait
+
+  test "${DRY_RUN}" = 'y' && printf '[%s] Detected dry-run ...\n' "$(date +'%X')" | tee -a ~/.xinit.log
+
+  # load theme
+  printf '[%s] Loading theme ...\n' "$(date +'%X')" | tee -a ~/.xinit.log
+  #test "${DRY_RUN}" = 'n' && "${scriptDir}/thm" l "${THEME_NAME}"
+
+  # compile theme
+  printf '[%s] Compiling theme ...\n' "$(date +'%X')" | tee -a ~/.xinit.log
+  #test "${DRY_RUN}" = 'n' && "${scriptDir}/thm" c "${THEME_NAME}"
+
+  # load config
+  if test -f "${stpDir}/${SETUP_NAME}/conf"; then
+    printf '[%s] Reading setup config ...\n' "$(date +'%X')" | tee -a ~/.xinit.log
+    test "${DRY_RUN}" = 'n' && . "${stpDir}/${SETUP_NAME}/conf"
+  fi
+
+  # init setup
+  if test -f "${stpDir}/${SETUP_NAME}/init"; then
+    printf '[%s] Starting setup init ...\n' "$(date +'%X')" | tee -a ~/.xinit.log
+    test "${DRY_RUN}" = 'n' && "${stpDir}/${SETUP_NAME}/init"
+  fi
+
+  export stp stpDir
+  printf '[%s] Starting setup programs ...\n' "$(date +'%X')" | tee -a ~/.xinit.log
+  for p in "${stpDir}/${SETUP_NAME}/run/"* ; do
+    if test -x "${p}"; then
+      bn=$(basename "${p}" | cut -d '_' -f 2)
+      printf '[%s] Setting up %s ...\n' "$(date +'%X')" "${bn}" | tee -a ~/.xinit.log
+      test "${DRY_RUN}" = 'n' && "${p}"
+    fi
+  done
+  unset p
+
+  printf '[%s] Starting user programs ...\n' "$(date +'%X')" | tee -a ~/.xinit.log
+  for p in "${usrRun}/"* ; do
+    if test -x "${p}"; then
+      bn=$(basename "${p}" | cut -d '_' -f 2)
+      printf '[%s] Starting %s ...\n' "$(date +'%X')" "${bn}" | tee -a ~/.xinit.log
+      test "${DRY_RUN}" = 'n' && "${p}"
+    fi
+  done
+  unset p
+
+  if test -e "${HOME}/.Xresources"; then
+    printf '[%s] Merging X resources ...\n' "$(date +'%X')" | tee -a ~/.xinit.log
+    test "${DRY_RUN}" = 'n' && xrdb -merge "${HOME}/.Xresources"
+  fi
+  
+  printf '[%s] Running X loop ...\n' "$(date +'%X')" | tee -a ~/.xinit.log
+  test "${DRY_RUN}" = 'n' && xloop
+}
+
+case "${act}" in
+  a) xapply ${@};;
+  x) xlogin ${@};;
+esac

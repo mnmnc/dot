@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+scriptDir=$(dirname `realpath -P "$0"`)
+scriptName=$(basename $0)
+
+main() {
+  local focID=$(pfw)
+
+  # If a focused window exists, skip
+  wattr "${focID}" && exit 0
+
+  wtf $(lsw -a | head -n 1)
+}
+
+main "${@}"

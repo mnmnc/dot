@@ -1,0 +1,15 @@
+#!/bin/sh
+# depends: bc, mktemp, curl, convert, sort, gawk, printf, cut, tr, tail, head
+
+scriptDir=$(dirname `realpath -P "$0"`)
+scriptName=$(basename $0)
+
+# download random wallpaper
+# -L, --location      Follow redirects (H)
+# -s, --silent        Silent mode (don't output anything)
+img="${PWD}/dsk"
+url="${URL:-https://source.unsplash.com/random/1680x1050}"
+printf 'Downloading random image to "%s" ...\n' "${img}"
+curl -L -s "${url}" > "${img}"
+
+"${scriptDir}/img" "${img}"

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+grep -o -E 'base0[0-9|A-F] #[0-9|a-z|A-Z]*' "${1:-$HOME/.Xresources}" | awk -F ' ' '{print $1"=\""$2"\""}'
+fnt=$(xrdb -q | grep font | head -n1 | sed 's|.*font:\ *||g;')
+fntName=$(printf '%s' "${fnt}" | awk -F ':' '{print $2}')
+fntSize=$(printf '%s' "${fnt}" | grep -o -E '[0-9]{1,2}')
+printf '%s="%s"\n' 'FONT_NAME' "${fntName}"
+printf '%s="%s"\n' 'FONT_SIZE' "${fntSize}"

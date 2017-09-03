@@ -1,0 +1,17 @@
+#!/bin/sh
+# dots-init-dirs
+
+mkdir -p ~/app ~/dot ~/exe ~/iod ~/src ~/tmp ~/usr
+
+(cd ~/app; mkdir cnf dat log sec)
+(cd ~/iod; mkdir bkp ftp prt scn tsh)
+(cd ~/src; mkdir dev pkg)
+(cd ~/usr; mkdir -p acd doc/{prv,pub,tpl,wrk} dsk mls/{prv,pub,tpl,wrk} med pub tmp/dls)
+(cd ~/usr/med; mkdir -p aud/{imp,rec,sng} img/{msc,rec,wpr} mov/{cin,msc,sec,ser} pls)
+
+#ln -s ~/app/cnf/bash/bashrc ~/.bashrc
+#ln -s ~/app/cnf/bash/profile ~/.bash_profile
+#ln -s ~/app/cnf/x/xinitrc ~/.xinitrc
+#ln -s ~/app/log/bash/history ~/.bash_history
+#ln -s ~/app/log/bash/login ~/.bash_login
+#ln -s ~/app/log/x/login ~/.xinit.log

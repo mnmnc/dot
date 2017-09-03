@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Add xft font from Xresources
+eval "$(x2v)"
+lemonbar -f "${FONT_NAME}" -f "FontAwesome" -F "${base05}" -B "${base01}" "${@}"

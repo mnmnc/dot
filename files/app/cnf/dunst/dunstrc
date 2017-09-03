@@ -1,0 +1,40 @@
+[global]
+    allow_markup = yes
+    format = "<b>%s</b>\n%b"
+    sort = yes
+    shrink = no
+    indicate_hidden = yes
+    alignment = center
+    bounce_freq = 0
+    show_age_threshold = 60
+    word_wrap = yes
+    ignore_newline = no
+    geometry = "150x5-10+25"
+    transparency = 0
+    idle_threshold = 120
+    monitor = 0
+    follow = keyboard
+    sticky_history = yes
+    line_height = 0
+    separator_height = 2
+    padding = 8
+    horizontal_padding = 2
+    startup_notification = false
+
+[frame]
+    width = 2
+
+[shortcuts]
+    close = ctrl+space
+    close_all = ctrl+shift+space
+    history = ctrl+grave
+    context = ctrl+shift+period
+
+[urgency_low]
+    timeout = 5
+
+[urgency_normal]
+    timeout = 20
+
+[urgency_critical]
+    timeout = 0

@@ -1,0 +1,35 @@
+#!/bin/sh
+
+r="${1}"
+g="${2}"
+b="${3}"
+
+# set max
+[[ "$r" -gt "$g" ]] && [[ "$r" -gt "$b" ]] && max="${r}" && a='r'
+[[ "$g" -gt "$r" ]] && [[ "$g" -gt "$b" ]] && max="${g}" && a='g'
+[[ "$b" -ge "$r" ]] && [[ "$b" -ge "$g" ]] && max="${b}" && a='b'
+
+# set min
+[[ "$r" -lt "$g" ]] && [[ "$r" -lt "$b" ]] && min="${r}"
+[[ "$g" -lt "$r" ]] && [[ "$g" -lt "$b" ]] && min="${g}"
+[[ "$b" -le "$r" ]] && [[ "$b" -le "$g" ]] && min="${b}"
+
+h="${max}", s="${max}"
+v=$(bc <<< "scale=2;$max / 2.55")
+d=$(bc <<< "scale=2;$max - $min" | sed 's/^\./0./')
+[[ "${max}" == 0 ]] && s=0 || s=$(bc <<< "scale=2;$d / $max * 100")
+
+if [[ "$min" -eq "$max" ]]; then
+  h=0
+else
+  [[ "$g" -lt "$b" ]] && t=6 || t=0
+  case "${a}" in
+    r) h=$(bc <<< "scale=2; ($g-$b) / $d + $t" | sed 's/^\./0./');;
+    g) h=$(bc <<< "scale=2; ($b-$r) / $d + 2" | sed 's/^\./0./');;
+    b) h=$(bc <<< "scale=2; ($r-$g) / $d + 4" | sed 's/^\./0./');;
+  esac
+
+  h=$(bc <<< "scale=0; $h * 60" | sed 's/^\./0./')
+fi
+
+echo "${h};${s};${v}"

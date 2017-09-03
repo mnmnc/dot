@@ -1,0 +1,42 @@
+#!/bin/sh
+# depends: bc, mktemp, curl, convert, sort, gawk, printf, cut, tr, tail, head
+
+scriptDir=$(dirname `realpath -P "$0"`)
+scriptName=$(basename $0)
+
+cf="${1}"; shift
+
+[[ ! -f "${cf}" ]] && exit 1
+
+# extract image colors
+printf 'Reading colors from file ...\n'
+IFS=$'\n' read -d '' -r -a cols < "${cf}"
+nc=$(printf "%s\n" "${col[@]}" | wc -l | awk '{print $1}')
+
+[[ "${nc}" -lt 8 ]] && printf 'Read only %s colors\n' "${nc}" && exit 1
+
+sc=$(((nc / 2) -4))
+ec=$(((nc / 2) +3))
+col=$(printf "%s\n" "${col[@]}" | sed -n "${sc},${ec}p")
+
+# find median colors and mix in the black, grey and white tones
+bw=('181818' '282828' '383838' '585858' 'b8b8b8' 'd8d8d8' 'e8e8e8' 'f8f8f8')
+# color to brightness
+c2b(){
+  read hex
+  echo "ibase=16; (${hex:0:2} + ${hex:2:2} + ${hex:4:2}) / 3" | bc
+}
+# colors to sorted
+c2s(){
+  while read hex; do
+    printf "$(printf $hex | c2b);$hex\n"
+  done | sort -n -t ";" | cut -d ";" -f 2
+}
+printf 'Generating color palette ...\n'
+col=$(printf "%s\n" "${col[@]}" | tr -d '#' | tr '[:lower:]' '[:upper:]' | c2s)
+
+for c in ${col}; do
+  bw+=("$c")
+done
+
+printf "%s\n" "${bw[@]}" > "${PWD}/col.list"

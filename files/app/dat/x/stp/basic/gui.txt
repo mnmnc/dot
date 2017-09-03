@@ -1,0 +1,60 @@
+###############################################
+# GUI - BASIC         
+##############################################
+# Statusbar (sticky):
+# > --------------- <
+# - Firewall disabled
+# - Webcam recording
+# - Microphone recording
+# - Battery charge low
+# - Harddisk space low
+# - RAM usage high
+# - CPU usage high
+# - CPU/GPU temp high
+#
+# Statusbar (sticky):
+# > --------------- <
+# - Active Groups
+# 
+# Notifications [High] (sticky):
+# > -------------------------- <
+# - Firewall gets disabled
+# - Webcam starts recording
+# - Microphone starts recording
+# - Battery charge low
+# - Harddisk space low
+# - RAM usage high
+# - CPU usage high
+# - CPU/GPU temp high
+# >
+# - VPN gets closed
+# - Kernel threw error/fatal
+# - SSH session starts
+#
+# Notifications [Norm] (5sec):
+# > ------------------------ <
+# - Firewall gets enabled
+# - Webcam stops recording
+# - Microphone stops recording
+# - Battery is mid/high
+# - Harddisk space ok
+# - RAM usage ok
+# - CPU usage ok
+# - CPU/GPU temp ok
+# >
+# - VPN gets opened
+# - Kernel threw warn (?)
+# - SSH session stops
+# >
+# - Display output changed
+# - Display Brightness changed
+# - Audio Level changed
+# - Audio Device changed
+# - Device plugged in/out
+# 
+# Notifications [Low] (3sec):
+# > ----------------------- <
+# - Feed got updated
+# - New mail arrived
+# - Song is being played|paused|stopped
+##############################################

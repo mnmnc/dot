@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+
+# snaw: snap window
+
+main() {
+  winPos=${1}
+  shift || exit
+  winIDs="${@}"
+
+  rootWin=$(lsw -r)
+  rootW=$(wattr w "${rootWin}")
+  rootH=$(wattr h "${rootWin}")
+
+  rootW=$((rootW - PAD_LEFT - PAD_RIGHT))
+  rootH=$((rootH - PAD_TOP - PAD_BOT))
+
+  for winID in $(echo "${winIDs}"); do
+    test "${winPos}" = "f" && chwb -s 0 "${winID}" || chwb -s "${WIN_BORDER}" "${winID}"
+    case "${winPos}" in
+      #         DISTANCE_LEFT           DISTANCE_TOP            WINDOW_WIDTH                      WINDOW_HEIGHT                     WINDOW_ID
+      't')  wtp "${PAD_LEFT}"           "${PAD_TOP}"            "$((rootW - (2 * WIN_BORDER)))"   "$((rootH/2 - (2 * WIN_BORDER)))" "${winID}";;
+      'b')  wtp "${PAD_LEFT}"           "$((PAD_TOP+rootH/2))"  "$((rootW - (2 * WIN_BORDER)))"   "$((rootH/2 - (2 * WIN_BORDER)))" "${winID}";;
+      'l')  wtp "${PAD_LEFT}"           "${PAD_TOP}"            "$((rootW/2 - (2 * WIN_BORDER)))" "$((rootH - (2 * WIN_BORDER)))"   "${winID}";;
+      'r')  wtp "$((PAD_LEFT+rootW/2))" "${PAD_TOP}"            "$((rootW/2 - (2 * WIN_BORDER)))" "$((rootH - (2 * WIN_BORDER)))"   "${winID}";;
+      'tl') wtp "${PAD_LEFT}"           "${PAD_TOP}"            "$((rootW/2 - (2 * WIN_BORDER)))" "$((rootH/2 - (2 * WIN_BORDER)))" "${winID}";;
+      'tr') wtp "$((PAD_LEFT+rootW/2))" "${PAD_TOP}"            "$((rootW/2 - (2 * WIN_BORDER)))" "$((rootH/2 - (2 * WIN_BORDER)))" "${winID}";;
+      'bl') wtp "${PAD_LEFT}"           "$((PAD_TOP+rootH/2))"  "$((rootW/2 - (2 * WIN_BORDER)))" "$((rootH/2 - (2 * WIN_BORDER)))" "${winID}";;
+      'br') wtp "$((PAD_LEFT+rootW/2))" "$((PAD_TOP+rootH/2))"  "$((rootW/2 - (2 * WIN_BORDER)))" "$((rootH/2 - (2 * WIN_BORDER)))" "${winID}";;
+      'c')  wtp "$((PAD_LEFT+rootW/4))" "$((PAD_TOP+rootH/4))"  "$((rootW/2 - (2 * WIN_BORDER)))" "$((rootH/2 - (2 * WIN_BORDER)))" "${winID}";;
+      'm')  wtp "$((PAD_LEFT+rootW/4))" "${PAD_TOP}"            "$((rootW/2 - (2 * WIN_BORDER)))" "$((rootH - (2 * WIN_BORDER)))"   "${winID}";;
+      'f')  wtp "${PAD_LEFT}"           "${PAD_TOP}"            "$rootW"   "$rootH"   "${winID}";;
+    esac
+  done
+}
+
+main ${@}

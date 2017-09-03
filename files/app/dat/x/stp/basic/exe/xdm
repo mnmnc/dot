@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Add xft font from Xresources
+eval "$(x2v)"
+
+dmenu -fn "${FONT_NAME}:size=${FONT_SIZE}" -nf "${base05}" -nb "${base01}" -sf "${base09}" -sb "${base01}" "${@}"

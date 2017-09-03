@@ -1,0 +1,140 @@
+# Read more about it on
+# https://github.com/baskerville/sxhkd/blob/master/parse.c#L384
+
+# reload sxhkd
+super + shift + space
+  pkill -USR1 sxhkd && notify-send -u low ' reload'
+
+# logout
+#super + shift + Escape
+#  kill $(pgrep stp)
+
+# Lock
+super + shift + k
+  notify-send ' lock'; sleep 3; slock
+
+# Logoff
+super + shift + l
+  notify-send ' logoff'; sleep 3; kill $(pgrep stp)
+
+# Shutdown
+super + shift + n
+  notify-send ' shutdown'; sleep 3; sudo shutdown -P now
+
+# Hibernate
+super + shift + h
+  notify-send ' sleep'; sleep 3; sudo zzz
+
+# Reboot
+super + shift + o
+  notify-send ' reboot'; sleep 3; sudo reboot
+
+# lock screen
+#super + alt + Escape
+#  slock
+
+# terminal
+super + Return
+  xst
+
+# program launcher
+super + space
+  dm-ex
+
+# file manager
+super + period
+  dm-fm
+
+# music player
+super + ctrl + period
+  dm-mp
+
+# clock notify
+super + alt + c
+  clk
+
+# weather notify
+super + alt + w
+  wtr
+
+# screenshot desktop
+super + Print
+  xsh 'desktop'
+
+# screenshot window
+super + ctrl + Print
+  xsh 'window'
+
+# start screen recording
+super + alt + Print
+  xsr
+
+# stop screen recording
+super + alt + Pause
+  pkill -f 'x11grab'
+
+# raise volume
+XF86AudioRaiseVolume
+  vol 5%+
+
+# lower volume
+XF86AudioLowerVolume
+  vol 5%-
+
+# toggle mute
+XF86AudioMute
+  vol toggle
+
+# raise brightness
+XF86MonBrightnessUp
+  xbacklight -inc 10
+
+# lower brightness
+XF86MonBrightnessDown
+  xbacklight -dec 10
+
+# kill window
+super + Escape
+  desw $(pfw)
+
+# focus window left/right/up/down
+super + {a,d,w,s}
+  focw pos {l,r,u,d}
+
+# focus window previous/next/first/last
+super + {q,e}
+  focw his {p,n}
+
+# move window left/right/up/down
+super + {Left,Right,Up,Down}
+  wmv {-20 0,20 0,0 -20,0 20} $(pfw)
+
+# resize window 
+super + ctrl + {Left,Right,Up,Down}
+  wrs {-20 0,20 0,0 -20,0 20} $(pfw)
+
+# snap window
+super + shift + {w,s,a,d,q,e,z,x,c,v,f}
+  snaw {t,b,l,r,tl,tr,bl,br,c,m,f} $(pfw)
+
+# modify window hide/maximize/default/fullscreen
+#super + shift + {y,x,d,f}
+  #modw {h,a,d,f} $(pfw)
+
+# modify window show last hidden
+#super + ctrl + shift + y
+  #modw s $(phw -l) # print last hidden window
+
+# group window <group> add/delete/toggle/destroy
+super + ctrl + {1-9,0}
+  grpw {1-9,0} add $(pfw)
+super + ctrl + shift + {1-9,0}
+  grpw {1-9,0} del $(pfw)
+super + {1-9,0}
+  grpw {1-9,0} tog
+super + {1-9,0} + Delete
+  grpw {1-9,0} des
+
+# modify window stacking order lower/higher/bottom/top
+super + alt + {Up,Down}
+  chwso {-r,-l} $(pfw)

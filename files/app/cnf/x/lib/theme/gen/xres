@@ -1,0 +1,18 @@
+#!/bin/sh
+
+scriptDir=$(dirname `realpath -P "$0"`)
+scriptName=$(basename $0)
+
+xres="${1:-$HOME/.Xresoures}"; shift
+
+[[ ! -f "${xres}" ]] && exit 1
+
+# extract image colors
+printf 'Extracting colors ...\n'
+bw=()
+for c in $(grep 'define base' "${xres}" | cut -d ' ' -f 3); do
+  bw+=("${c}")
+done
+
+printf 'Generating color palette ...\n'
+printf "%s\n" "${bw[@]}" > "${PWD}/col.list"

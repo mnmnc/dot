@@ -1,0 +1,247 @@
+#!/bin/env bash
+
+scriptDir=$(dirname `realpath -P "$0"`)
+scriptName=$(basename $0)
+
+act="${1}"; shift
+#thmDir='/gui/thm'
+thmDir="${HOME}/app/dat/x/thm"
+prvDir="${HOME}/app/dat/x/prv"
+genDir="${scriptDir}/theme/gen"
+defThm="${scriptDir}/theme/def"
+lddThm="${thmDir}/ldd"
+genThm="${thmDir}/gen"
+
+# SETUP!
+cnfDir="${HOME}/app/cnf"
+sklDir="${HOME}/app/skl"
+
+test ! -d "${thmDir}" && mkdir -p "${thmDir}"
+test ! -d "${defThm}" && mkdir -p "${defThm}"
+test ! -d "${lddThm}" && mkdir -p "${lddThm}"
+
+# load config values
+lcv(){
+  . "${lddThm}/col.sh"
+  test -f "${lddThm}" && cnfSh="${lddThm}/cnf.sh" || cnfSh="${defThm}/cnf.sh"
+
+  # overwrite variables like baseXY
+  vn=$(grep -E '[A-Z]*\=.*' "${cnfSh}" | cut -d '=' -f 1)
+  for v in ${vn}; do
+    vv="${!v}" # TODO: REPLACE THIS BASHISM!
+    test "${!v}" = *base* && eval "${v}=${!vv}"
+  done
+}
+
+# insert config values
+icv(){
+  test -f "${lddThm}" && cnfSh="${lddThm}/cnf.sh" || cnfSh="${defThm}/cnf.sh"
+
+  # read variables from configs
+  vn=$(grep -h -E '[A-Z]*\=.*' "${lddThm}/col.sh" "${cnfSh}" | cut -d '=' -f 1)
+  se=""
+
+  # replace baseXY with it's value, if required
+  for v in ${vn}; do
+    se+="s;{{${v}}};${!v};g; "
+  done
+
+  # replace all placeholders inside the file with its value
+  sed -e "${se}" "${1}" > "${2}"
+}
+
+apply(){
+  icv "${prvDir}/colorrc" "${HOME}/.colorrc"
+}
+
+compile(){
+  thm=$(cat "${lddThm}/thm")
+
+  return 0
+
+  # load config values
+  #lcv
+
+  # initialize
+  test ! -d "${thmDir}/${thm}/cmp" && mkdir -p "${thmDir}/${thm}/cmp"
+
+  # iterate through all config skeletons and compile them
+  printf 'Compile app-configs "%s".' "${thm}"
+  for ac in $(find ${sklDir} -type f); do
+    cac="${thmDir}/${thm}/cmp/${ac}"
+    icv "${ac}" "${cac}"
+  done
+}
+
+endless(){
+  genType="${1:-rnd-img}"; shift
+
+  i=0
+  # generate themes as long as user doesn't cancel
+  while :; do
+    clear
+    i=$(($i +1))
+    printf 'Generating theme no #%s ...\n' "${i}"
+    "${scriptDir}/thm" g "${genType}" && "${scriptDir}/thm" l gen && "${scriptDir}/thm" s hash
+
+    # generate overview every 10 theme generations
+    if test $(($i % 10)) -eq 0; then
+      clear
+      "${scriptDir}/thm" o
+    fi
+  done
+}
+
+generate(){
+  gen="${1}"; shift
+
+  test ! -f "${genDir}/${gen}" && return 1
+
+  test ! -d "${genThm}" && mkdir -p "${genThm}"
+
+  cd "${genThm}"
+  "${genDir}/${gen}" ${@}
+
+  if test -f "${PWD}/col.list"; then
+    printf 'Reading color palette ...\n'
+    #IFS=$'\n' read -r bw < "${PWD}/col.list"
+    bw=$(cat "${PWD}/col.list")
+    #rm "${PWD}/col.list"
+
+    # todo: ensure colors are not too bright/dark
+
+    # generate a config with all colors
+    i=0
+    printf 'Saving color palette ...\n'
+    printf '#!/bin/sh\n\n' > "${PWD}/col.sh"
+    for c in ${bw}; do
+      test ! -z "${c}" || continue
+      vn="base0"$(echo "obase=16;${i}" | bc)
+      echo "${vn}=\"#${c}\"" >> "${PWD}/col.sh"
+      i=$((i +1))
+    done
+  fi
+
+  cd - >/dev/null
+}
+
+load(){
+  thm="${1}"; shift
+
+  test ! -d "${thmDir}/${thm}" && return 1
+
+  if test -f "${lddThm}/thm"; then
+    curThm=$(cat "${lddThm}/thm")
+    if test "${curThm}" = "${thm}"; then
+      printf 'Theme %s already loaded ...\n' "${thm}"
+      return
+    fi
+  fi
+
+  test -d "${lddThm}" && printf 'Clearing loaded cache ...\n' && rm -r "${lddThm}" && mkdir -p "${lddThm}"
+
+  printf 'Copying contents ...\n'
+  test -f "${thmDir}/${thm}/init.sh" && cp "${thmDir}/${thm}/init.sh" "${lddThm}/init.sh"
+  test -f "${thmDir}/${thm}/col.sh" && cp "${thmDir}/${thm}/col.sh" "${lddThm}/col.sh"
+  test -f "${thmDir}/${thm}/dsk" && cp "${thmDir}/${thm}/dsk" "${lddThm}/dsk"
+
+  test -f "${thmDir}/${thm}/cnf.sh" && cnfSh="${thmDir}/${thm}/cnf.sh" || cnfSh="${defThm}/cnf.sh"
+  cp "${cnfSh}" "${lddThm}/cnf.sh"
+
+  test -f "${lddThm}/init.sh" && printf 'Initializing theme ...\n' && "${lddThm}/init.sh"
+
+  printf 'Finishing theme ...\n'
+  printf "${thm}" > "${lddThm}/thm"
+
+  # load config values
+  lcv
+
+  test ! -d "${lddThm}/prv" && mkdir -p "${lddThm}/prv"
+
+  printf 'Generating previews ...\n'
+
+  for f in $(cd "${prvDir}" && find . -type f); do
+    icv "${prvDir}/${f}" "${lddThm}/prv/${f}"
+  done
+}
+
+overview(){
+  printf 'Creating theme overview ...\n'
+  printf '<html><head></head><body style="width: 758px; margin: 0px auto;">' > "${thmDir}/overview.html"
+  for tn in $(cd "${thmDir}" && find * -maxdepth 0 -type d | grep -v -e 'gen\|ldd\|man'); do
+    source "${thmDir}/${tn}/col.sh"
+    printf '<div style="position: relative; left: 2px; top: 25px"><b style="color:%s; background: %s; padding: 5px;">%s</b></div>' "${base0F}" "${base07}" "${tn}" >> "${thmDir}/overview.html"
+    printf '<img src="%s/dsk" width="100%%" height="auto" />' "${tn}" >> "${thmDir}/overview.html"
+    printf '<div style="clear: both">' >> "${thmDir}/overview.html"
+    for bn in 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F; do
+      vn="base${bn}"
+      printf '<div style="background: %s;width: 6.25%%; height: 6.25%%; float: left"></div>' "${!vn}" >> "${thmDir}/overview.html"
+    done
+    printf '</div>' >> "${thmDir}/overview.html"
+    printf '<br />' >> "${thmDir}/overview.html"
+  done
+  printf '</body>' >> "${thmDir}/overview.html"
+}
+
+preview(){
+  xdg-open "${lddThm}/prv/site.html"
+}
+
+reload(){
+  thm="${1}"; shift
+
+  test ! -d "${thmDir}/${thm}" && return 1
+
+  printf 'Reloading theme ...\n'
+  #"${scriptDir}/thm" l "${thm}"
+}
+
+save(){
+  new="${1}"; shift
+
+  if test "${new}" = 'hash'; then
+    new=$(md5sum "${lddThm}/dsk" | cut -d ' ' -f 1)
+  fi
+
+  test -d "${thmDir}/${new}" && >&2 printf 'Theme %s already exists!\n' "${new}" && return 1
+
+  printf 'Saving theme ...\n'
+  cp -r "${lddThm}" "${thmDir}/${new}"
+
+  printf 'Cleaning theme ...\n'
+  test -f "${thmDir}/${new}/init.sh" && rm "${thmDir}/${new}/init.sh"
+  test -f "${thmDir}/${new}/thm" && rm "${thmDir}/${new}/thm"
+}
+
+# generate a theme
+# thm g img|col|rnd-img|rnd-col
+
+# load a theme
+# thm l <theme-name>
+
+# preview theme in browser
+# thm p
+
+# compile configs for theme ~/app/skl
+# thm c
+
+# save a loaded theme
+# thm s <theme-name>|hash
+
+# load new theme
+# thm l <theme-name>
+
+# generate endless themes and save them based on hash
+# thm e [<random-type>]
+
+case "${act}" in
+  a) apply ${@};;
+  c) compile ${@};;
+  e) endless ${@};;
+  g) generate ${@};;
+  l) load ${@};;
+  o) overview ${@};;
+  p) preview ${@};;
+  r) reload ${@};;
+  s) save ${@};;
+esac

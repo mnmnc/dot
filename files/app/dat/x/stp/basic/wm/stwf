@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+
+eval "$(x2v)"
+
+#echo "${base0B}"
+
+scriptDir=$(dirname `realpath -P "$0"`)
+scriptName=$(basename $0)
+#. "${scriptDir}/config"
+
+usage() {
+  cat <<EOF
+  ${scriptName} <WID>
+
+  Set window focus
+EOF
+  exit 1
+}
+
+main() {
+  test "$#" -ne 1 && >&2 usage
+
+  if ! wattr "${1}"; then
+    1>&2 echo "Error: Window \"${1}\" does not exist."
+    return 1
+  fi
+
+  wattr m "${1}" || mapw "${1}"
+
+  wtf "${1}" && (
+    chwb -c "${base0B}" "${1}"
+  ) || exit 1
+}
+
+main "${@}"

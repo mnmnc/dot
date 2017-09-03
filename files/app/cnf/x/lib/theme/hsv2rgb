@@ -1,0 +1,45 @@
+#!/bin/sh
+
+h="${1}"
+s="${2}"
+v="${3}"
+
+i=$(bc <<< "scale=2;$h * 6")
+f=$(bc <<< "scale=2;$h * 6 - $i")
+p=$(bc <<< "scale=2;$v * (1 - $s)")
+q=$(bc <<< "scale=2;$v * (1 - $f * $s)")
+t=$(bc <<< "scale=2;$v * (1 - (1 - $f) * $s)")
+
+d=$(bc <<< "scale=2;$i % 6")
+
+case "${d}" in
+  0) r=$v; g=$t; b=$p;;
+  1) r=$q; g=$v; b=$p;;
+  2) r=$p; g=$v; b=$t;;
+  3) r=$p; g=$q; b=$v;;
+  4) r=$t; g=$p; b=$v;;
+  5) r=$v; g=$p; b=$q;;
+esac
+
+echo "${r}|${g}|${b}"
+
+# function hsvToRgb(h, s, v) {
+#   var r, g, b;
+
+#   var i = Math.floor(h * 6);
+#   var f = h * 6 - i;
+#   var p = v * (1 - s);
+#   var q = v * (1 - f * s);
+#   var t = v * (1 - (1 - f) * s);
+
+#   switch (i % 6) {
+#     case 0: r = v, g = t, b = p; break;
+#     case 1: r = q, g = v, b = p; break;
+#     case 2: r = p, g = v, b = t; break;
+#     case 3: r = p, g = q, b = v; break;
+#     case 4: r = t, g = p, b = v; break;
+#     case 5: r = v, g = p, b = q; break;
+#   }
+
+#   return [ r * 255, g * 255, b * 255 ];
+# }

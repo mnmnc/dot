@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# Examples:
+#  ix hello.txt              # paste file (name/ext will be set).
+#  echo Hello world. | ix    # read from STDIN (won't set name/ext).
+#  ix -n 1 self_destruct.txt # paste will be deleted after one read.
+#  ix -i ID hello.txt        # replace ID, if you have permission.
+#  ix -d ID
+
+main() {
+  OPTIND=0
+
+  url="ix.io"
+  test -e "${XI_CRED}" && source "${XI_CRED}"
+  test ! -z "${XI_USER}" && url="${XI_USER}:${XI_PASS}@${url}"
+
+  #test -f "$HOME/.netrc"  && opts='-n'
+
+  while getopts ":hd:i:n:u:" x; do
+    case $x in
+      h) echo "ix [-d ID] [-i ID] [-n N] [opts]"; return;;
+      d) curl $opts -X DELETE "${url}/$OPTARG"; return;;
+      u) curl $opts -X GET "${url}/user/$OPTARG"; return;;
+      i) opts="$opts -X PUT"; id="$OPTARG";;
+      n) opts="$opts -F read:1=$OPTARG";;
+    esac
+  done
+
+  shift $((OPTIND - 1))
+
+  if test -t 0; then
+    fn="$1"
+    test ! -z "${1}" && shift
+    if test ! -z "$fn"; then
+        curl $opts -F f:1=@"$fn" $* "${url}/$id"
+        return
+    fi
+    printf '^C to cancel, ^D to send.\n'
+  fi
+
+  curl $opts -F f:1='<-' $* "${url}/$id"
+}
+
+main $*

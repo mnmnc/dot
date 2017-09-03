@@ -1,0 +1,7 @@
+#!/bin/sh
+# dots-link-dirs
+
+scriptDir=$(dirname `realpath -P "$0"`)
+parentDir=$(dirname "${scriptDir}")
+
+mkdir -p "${parentDir}/files/app" && ! grep -qs "${parentDir}/files/app" /proc/mounts && mount --bind "/home/$(logname)/app" "${parentDir}/files/app"

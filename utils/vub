@@ -1,0 +1,83 @@
+#!/bin/sh
+# void-user-backup
+
+test -z "${usrName}" && usrName=$(logname)
+
+vub_create () {
+  test -d /data || exit 1
+  usrDir="/home/${usrName}"
+
+  if ! test -d "${usrDir}/msc"; then
+    printf '[%s] Preparing cache ...\n' "$(date +'%X')"
+    mkdir -p "${usrDir}/msc"
+  fi
+
+  if test -f "${usrDir}/msc/lock"; then
+    printf '[%s] ERROR: Cannot lock. Another backup in progress?\n' "$(date +'%X')"
+    exit 1
+  fi
+
+  if ! test -d "/data/bak/users"; then
+    printf '[%s] Creating backup repo ...\n' "$(date +'%X')"
+    borg init "/data/bak/users"
+  fi
+
+  printf '[%s] Starting backup ...\n' "$(date +'%X')"
+  dateTime="$(date +'%Y%m%d-%H%M%S')"
+  printf '%s' "${dateTime}" > "${usrDir}/lock"
+
+  #if test -d "${usrDir}/.ssh"; then
+  #  printf '[%s] Backing up ssh ...\n' "$(date +'%X')"
+  #fi
+
+  printf '[%s] Compressing backup ...\n' "$(date +'%X')"
+  tar cfz "${usrDir}/msc/user-data.tar.gz" "${usrDir}/msc/"
+
+  if test -f "${usrDir}/msc/core-cfg.tar.gz"; then
+    printf '[%s] Creating checksum ...\n' "$(date +'%X')"
+    (cd "${usrDir}/msc" && md5sum core-cfg.tar.gz > "${usrDir}/msc/user-data.md5")
+  fi
+
+  printf '[%s] Cleaning cache ...\n' "$(date +'%X')"
+  find "${usrDir}/msc" -type f ! -name 'user-data.*' -delete
+
+  if grep -qs /host /proc/mounts; then
+    printf '[%s] Copying backup to host ...\n' "$(date +'%X')"
+    cp "${usrDir}/msc/"* /host
+  fi
+
+  printf '[%s] Creating user fs backup ...\n' "$(date +'%X')"
+  borg create "/data/bak/users::${usrName}@${dateTime}" "${usrDir}/app" "${usrDir}/exe" "${usrDir}/iod" "${usrDir}/msc" "${usrDir}/src" "${usrDir}/usr"
+
+  printf '[%s] Cleaning up ...\n' "$(date +'%X')"
+  rm -r "${usrDir}/msc"
+}
+
+vub_list () {
+  printf '[%s] Listing available backups ...\n' "$(date +'%X')"
+  borg list '/data/bak/users'
+}
+
+vub_mount () {
+  vub_list
+
+  printf '[%s] Choose mount backup ...\n' "$(date +'%X')"
+  read -p ': ' answ
+}
+
+vub_restore () {
+  vub_list
+
+  printf '[%s] Choose restore backup ...\n' "$(date +'%X')"
+  read -p ': ' answ
+}
+
+test -z "${1}" && exit 1
+act="${1}"; shift
+
+case "${act}" in
+  c) vub_create ${@};;
+  l) vub_list ${@};;
+  m) vub_mount ${@};;
+  r) vub_restore ${@};;
+esac

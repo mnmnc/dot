@@ -1,0 +1,46 @@
+#!/bin/sh
+# void-root-backup
+
+vrb_diff() {
+  src="${1}"; tgt="${2}"
+  printf '[%s] Comparing roots ...\n' "$(date +'%X')"
+  test -z "${tgt}" && exit 1
+  rsync -avnr --include="/etc/***" --include="/root/***" --include="/usr/***" --include="/var/***" --exclude="*" / "${tgt}" | tail -n +2 | head -n -3
+}
+
+vrb_sync() {
+  src="${1}"; tgt="${2}"
+
+  if ! grep -qs /${tgt} /proc/mounts; then
+  	printf '[%s] ERROR: /%s is not mounted ...\n' "$(date +'%X')" "${tgt}"
+    exit 1
+  fi
+
+  printf '[%s] Preparing %s ...\n' "$(date +'%X')" "${tgt}"
+  test -d /${tgt}/dev || mkdir /${tgt}/dev
+  test -d /${tgt}/sys || mkdir /${tgt}/sys
+  test -d /${tgt}/proc || mkdir /${tgt}/proc
+
+  test -d /${tgt}/data || mkdir /${tgt}/data
+  test -d /${tgt}/home || mkdir /${tgt}/home
+  test -d /${tgt}/${src} || mkdir /${tgt}/${src}
+  test -d /${tgt}/boot || mkdir /${tgt}/boot
+  
+  # Sync root files & folders to ${tgt}
+  printf '[%s] Syncing files ...\n' "$(date +'%X')"
+  rsync -a --delete /etc /root /usr /var /${tgt}
+  rsync -a --delete /bin /lib /lib32 /lib64 /sbin /${tgt}
+  
+  # Mount ${src} folder on fstab
+  printf '[%s] Fixing fstab ...\n' "$(date +'%X')"
+  sed -i "s|${tgt}|${src}|g" /${tgt}/etc/fstab
+}
+
+test -z "${1}" && exit 1
+act="${1}"; shift
+
+case "${act}" in
+  c) vrb_sync 'void' 'copy' ${@};;
+  d) test -d /copy && vrb_diff 'void' 'copy' ${@} || vrb_diff 'copy' 'void' ${@};;
+  r) vrb_sync 'copy' 'void' ${@};;
+esac

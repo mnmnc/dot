@@ -1,0 +1,29 @@
+#!/bin/sh
+# void-full-backup
+
+vfb_create() {
+  printf '──────────────────────────────────────\n'
+  printf '[%s] Creating ROOT─backup ...\n' "$(date +'%X')"
+  printf '──────────────────────────────────────\n'
+  vrb c || exit 1
+  
+  printf '──────────────────────────────────────\n'
+  printf '[%s] Creating System─backup ...\n' "$(date +'%X')"
+  printf '──────────────────────────────────────\n'
+  vsb c || exit 1
+  
+  printf '──────────────────────────────────────\n'
+  printf '[%s] Creating User─backups ...\n' "$(date +'%X')"
+  printf '──────────────────────────────────────\n'
+  usrNames=$(cd /home && find * -maxdepth 0 -type d)
+  for usr in ${usrNames}; do
+    VUB_USER="${usr}" vub c || exit 1
+  done
+}
+
+test -z "${1}" && exit 1
+act="${1}"; shift
+
+case "${act}" in
+  c) vfb_create ${@};;
+esac

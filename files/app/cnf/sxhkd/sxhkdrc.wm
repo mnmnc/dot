@@ -1,0 +1,88 @@
+#
+# Refresh & Quit
+#
+super + shift + space
+  pkill -USR1 sxhkd
+
+super + alt + Escape
+  kill $(pgrep stp)
+
+#
+# Dmenu
+#
+super + Return
+  xst
+
+super + space
+  dm-ex
+
+super + period
+  dm-fm
+
+super + shift + period
+  dm-mp
+
+#
+# window management
+#
+super + Escape
+  killw $(pfw)
+
+# focus window left|right|top|bottom
+super + {a,d,w,s}
+  stwf $(fndw -r {w,e,n,s})
+# focus {left,right,up,down}
+
+# focus window prev|next
+super + {q,e}
+  stwf $(fndw -r {P,N})
+#  vroum {next,prev} && \
+#  wmp -a $(wattr xy $(pfw)) && \
+#  wmp -r $(wattr wh $(pfw))
+
+# move windows around
+super + {Left,Down,Up,Right}
+  wmv {-20 0, 0 20, 0 -20, 20 0} $(pfw)
+
+# resize windows
+super + alt + {Left,Down,Up,Right}
+  wrs {-20 0, 0 20, 0 -20, 20, 0} $(pfw)
+
+#
+# other
+#
+
+## Audio Volume Keys
+XF86AudioRaiseVolume
+  vol 5%+
+
+XF86AudioLowerVolume
+  vol 5%-
+
+XF86AudioMute
+  vol toggle
+
+## Audio Playback Keys
+{XF86AudioPrev, XF86AudioNext, XF86AudioPlay}
+  playerctl {previous,next,play-pause}
+
+## Brightness Keys
+XF86MonBrightnessUp
+  xbacklight -inc 10
+
+XF86MonBrightnessDown
+  xbacklight -dec 10
+
+super + Print
+  xsh 'desktop'
+
+super + ctrl + Print
+  xsh 'window'
+
+# Start screen recording
+super + alt + Print
+  xsr
+
+# Stop screen recording
+super + alt + Pause
+  pkill -f 'x11grab'

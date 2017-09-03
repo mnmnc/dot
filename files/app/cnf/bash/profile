@@ -1,0 +1,17 @@
+#!/bin/sh
+# user dependent .bash_profile file
+
+printf '[%s] Reading profile ...\n' "$(date +'%X')" | tee "${HOME}/.bash_login"
+
+# source the users bashrc if it exists
+if test -f "${HOME}/.bashrc"; then
+  printf '[%s] Sourcing bashrc ...\n' "$(date +'%X')" | tee -a "${HOME}/.bash_login"
+  source "${HOME}/.bashrc"
+fi
+
+# start X if we are on terminal number #1
+#if test -z "${DISPLAY}" && test "$(tty)" = /dev/tty1; then
+#  printf '[%s] Starting X server...\n' "$(date +'%X')" | tee -a "${HOME}/.bash_login"
+#  startx
+#  logout
+#fi

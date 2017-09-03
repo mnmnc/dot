@@ -1,0 +1,49 @@
+# focus window left/right/up/down
+super + {a,d,w,s}
+  focw pos {l,r,u,d}
+
+# focus window previous/next/first/last
+super + {q,e,z,x}
+  focw his {p,n,f,l}
+
+# move window left/right/up/down
+super + {Left,Right,Up,Down}
+  movw {l,r,u,d} add 10px $(pfw)
+
+# resize window 
+super + ctrl + {Left,Right,Up,Down}
+  resw {l,r,u,d} add 10px $(pfw)
+super + shift + {Left,Right,Up,Down}
+  resw {l,r,u,d} del 10px $(pfw)
+
+# modify window hide/maximize/default/fullscreen
+super + shift + {y,x,d,f}
+  modw {h,a,d,f} $(pfw)
+
+# modify window show last hidden
+super + ctrl + shift + y
+  modw s $(phw -l) # print last hidden window
+
+# group window <group> add/delete/toggle/destroy
+super + ctrl + {1-9,0}
+  grpw {1-9,0} add $(pfw)
+super + ctrl + alt + {1-9,0}
+  grpw {1-9,0} del $(pfw)
+super + {1-9,0}
+  grpw {1-9,0} tog
+super + ctrl + shift + {1-9,0}
+  grpw {1-9,0} des
+
+# modify window stacking order lower/higher/bottom/top
+super + {pageUp,pageDown}
+  mows {l,h} $(pfw)
+super + shift + {pageUp,pageDown}
+  mows {b,t} $(pfw)
+
+# snap window top/bottom/left/right/topleft/topright/bottomleft/bottomright/center
+super + alt + {w,s,a,d,q,e,z,x,c}
+  snaw {t,b,l,r,tl,tr,bl,br,c} $(pfw)
+
+# Lock, Logoff, Shutdown, Hibernate, Reboot
+super + shift + {k,l,n,h,o,u}
+  {lkur,lour,sdpc,hnpc,rbpc,spdc}

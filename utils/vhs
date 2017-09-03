@@ -1,0 +1,12 @@
+#!/bin/sh
+# void-host-sync
+
+if ! grep -qs /host /proc/mounts; then
+  printf '[%s] Preparing host-mount ...\n' "$(date +'%X')"
+  mount -a
+
+  ! grep -qs /host /proc/mounts && exit 1
+fi
+
+printf '[%s] Syncing files from /host/home to %s ...\n' "$(date +'%X')" "${1:-$HOME}"
+rsync -ar /host/home/ "${1:-$HOME}"

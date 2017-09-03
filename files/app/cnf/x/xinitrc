@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec "${HOME}/app/cnf/x/lib/stp" x ${@}

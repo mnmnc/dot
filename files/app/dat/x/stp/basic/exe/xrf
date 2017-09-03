@@ -1,0 +1,19 @@
+#!/bin/sh
+
+eval "$(x2v)"
+
+# refresh bspwm
+#~/app/cnf/bspwm/bspwmrc
+
+# refresh bar
+pgrep ntw >/dev/null && kill -8 $(pgrep ntw)
+pgrep ntb >/dev/null && kill -8 $(pgrep ntb)
+pgrep ntr >/dev/null && kill -8 $(pgrep ntr)
+pgrep lemonbar >/dev/null && kill -8 $(pgrep lemonbar)
+
+ntb &
+ntw &
+
+# refresh background
+xsetroot -solid "${base00}"
+feh --bg-fill "${HOME}/app/dat/x/thm/${THEME_NAME}/dsk"

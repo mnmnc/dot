@@ -1,0 +1,156 @@
+#!/bin/sh
+
+sleep 0.05
+
+test -p "${NOTIFY_FIFO}" || exit 1
+
+while true; do
+  printf 'BT|%s\n' $(acpi -b | grep 'Battery' | head -n 1 | grep -o '[0-9]*%' | tr -d '%')
+  sleep 60.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'CL|%s\n' $(date +'%H:%M')
+  sleep 60.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  temp=$(sensors | grep 'Core' | awk '{print $1$2" "$3}' | tr -d '+' | grep -o -E '[0-9]{2,3}' | tr '\n' ' ')
+  max=0
+  for t in ${temp}; do
+    test "${t}" -gt "${max}" && max="${t}"
+  done
+  printf 'CT|%s\n' "${max}"
+  sleep 15.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'CU|%s\n' $(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {printf "%3.0f\n", usage}' | xargs)
+  sleep 60.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'FW|%s\n' $(pgrep -f ^ufw > /dev/null && printf '1' || printf '0')
+  sleep 5.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'GT|%s\n' $(sensors | grep 'temp1' | awk '{print $1$2" "$3}' | tr -d '+' | grep -o -E '[0-9]{2,3}' | tr '\n' ' ')
+  sleep 15.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'IC|%s\n' $(wget -q --spider "http://google.com" && printf '1' || printf '0')
+  sleep 5
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  lst="${lay}"
+  lay=$(setxkbmap -query | grep layout | awk '{print $2}' | tr -d '\n')
+
+  if test "${lay}" != "" && test "${lay}" != "${lst}"; then
+    printf 'KL:%s\n' "${lay}"
+  fi
+  sleep 5
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'LD|%s\n' $(cat /proc/loadavg | awk '{print $1}' | tr -d '.' | sed 's/^0*//')
+  sleep 15.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'MC|%s\n' $(fuser /dev/snd/pcmC1D0c > /dev/null 2>&1 && printf '1' || printf '0')
+  sleep 5.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  last="${cur}"
+  mpc idle >/dev/null || sleep 5.
+  cur=$(mpc current)
+  test "${last}" != "${cur}" && test -n "${cur}" && printf 'MS|%s\n' "${cur}"
+done > "${NOTIFY_FIFO}" &
+
+#while true; do
+#  mnt=$(cat /proc/mounts | grep -o '/dev/sd[a-z][1-9]')
+#  for mntPnt in ${mnt}; do
+#    mntName=$(cat )
+#  done
+#  sleep 5.
+#done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'PK|%s\n' $(xbps-install -Mun | wc -l)
+  sleep 900.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'RM|%s\n' $(LC_ALL=C free | grep Mem | awk '{printf "%3.0f\n", $3/$2 * 100.0}' | xargs)
+  sleep 15.
+done > "${NOTIFY_FIFO}" &
+
+for dev in "/" "/copy" "/data"; do
+  while :; do
+    printf 'SP|%s|%s\n' "${dev}" $(df -h  "${dev}" | tail -n 1 | awk '{print $5}' | tr -d '%')
+    sleep 60.
+  done > "${NOTIFY_FIFO}" &
+done
+
+while true; do
+  R1=$(cat /sys/class/net/wlp2s0/statistics/rx_bytes)
+  sleep 1
+  R2=$(cat /sys/class/net/wlp2s0/statistics/rx_bytes)
+  RBPS=$(expr $R2 - $R1)
+  RKBPS=$(expr $RBPS / 1024)
+  printf 'RX|%s\n' "${RKBPS}"
+  sleep 4.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  T1=$(cat /sys/class/net/wlp2s0/statistics/tx_bytes)
+  sleep 1
+  T2=$(cat /sys/class/net/wlp2s0/statistics/tx_bytes)
+  TBPS=$(expr $T2 - $T1)
+  TKBPS=$(expr $TBPS / 1024)
+  printf 'TX|%s\n' "${TKBPS}"
+  sleep 4.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'SI|%s\n' $(who | grep pts | wc -l)
+  sleep 3.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'SO|%s\n' $(pgrep -x ssh | wc -l)
+  sleep 3.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'WC|%s\n' $(fuser /dev/video0 > /dev/null 2>&1 && printf '1' || printf '0')
+  sleep 5.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  printf 'WL|%s\n' $(grep wlp2s0 /proc/net/wireless | awk '{ print int($3 * 100 / 70) }')
+  sleep 5.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
+  lastWeather="${weather}"
+  lastTemp="${temp}"
+  ip=$(curl -s 'http://whatismyip.akamai.com')
+  geo=$(curl -s "http://freegeoip.net/json/${ip}")
+  lat=$(printf '%s' "${geo}" | grep -o '"latitude":[0-9.]*' | grep -o '[0-9.]*')
+  lng=$(printf '%s' "${geo}" | grep -o '"longitude":[0-9.]*' | grep -o '[0-9.]*')
+  data=$(curl -s "http://api.openweathermap.org/data/2.5/weather?lon=${lng}&lat=${lat}&appid=${OPENWEATHERMAP_API_KEY}&units=metric")
+  weather=$(printf '%s' "${data}" | grep -w -o -E '(Clear|Fog|Clouds|Mist|Rain|Snow|Storm|Thunderstorm)')
+  temp=$(printf '%s' "${data}" | grep -o -E '"temp":[0-9.]*' | grep -o -E '[0-9.]*' | cut -d '.' -f 1)
+
+  if test "${weather}" != "${lastWeather}" || test "${temp}" != "${lastTemp}"; then
+    printf 'WT|%s|%s\n' "${weather}" "${temp}"
+  fi
+  sleep 600.
+done > "${NOTIFY_FIFO}" &
+
+#bspc subscribe > "${NOTIFY_FIFO}" &

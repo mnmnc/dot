@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+# ii-reader
+
+while test $# -gt 0; do
+  case "$1" in
+    -s|--server) II_SERVER="${2}"; shift 2;;
+    -c|--channel) II_CHANNEL="${2}"; shift 2;;
+    -f|--friend) II_FRIEND="${2}"; shift 2;;
+    *) printf 'Invalid param: %s' "${1}"; exit 1;;
+  esac
+done
+II_SERVER="${II_SERVER:-irc.freenode.net}"
+II_DIR="${II_DIR:-$HOME/app/dat/irc}"
+
+if test -z "${II_CHANNEL}"; then
+  if ! test -z "${II_FRIEND}"; then
+    test -d "${II_DIR}/${II_SERVER}/${II_FRIEND}" || exit 1
+    clear && tail -f "${II_DIR}/${II_SERVER}/${II_FRIEND}/out"
+  else
+    test -d "${II_DIR}/${II_SERVER}" || exit 1
+    clear && tail -f "${II_DIR}/${II_SERVER}/out"
+  fi
+else
+  test -d "${II_DIR}/${II_SERVER}/#${II_CHANNEL}" || exit 1
+  clear && tail -f "${II_DIR}/${II_SERVER}/#${II_CHANNEL}/out"
+fi

@@ -1,0 +1,24 @@
+#!/bin/sh
+# void-distribute-backup
+
+if test -d /data/bak/system; then
+  printf '[%s] Calculating backup space for system...\n' "$(date +'%X')"
+  du -sh /data/bak/system
+fi
+
+if test -d /data/bak/users; then
+  printf '[%s] Calculating backup space for users...\n' "$(date +'%X')"
+  du -sh /data/bak/users
+fi
+
+printf '[%s] Scanning for connected drives...\n' "$(date +'%X')"
+if grep -qs /data/mount/touro-drive /proc/mounts; then
+  if test -d /data/bak/system; then
+    printf '[%s] Distributing system-backups to %s ...\n' "$(date +'%X')" 'touro-drive'
+    rsync -a --delete /data/bak/system /data/mount/touro-drive/bak/
+  fi
+  if test -d /data/bak/users; then
+    printf '[%s] Distributing user-backups to %s ...\n' "$(date +'%X')" 'touro-drive'
+    rsync -a --delete /data/bak/users /data/mount/touro-drive/bak/
+  fi
+fi

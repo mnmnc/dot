@@ -1,0 +1,114 @@
+#!/bin/sh
+
+realPath=$(realpath -P "$0")
+scriptDir=$(dirname "${realPath}")
+
+while :; do
+  act=$(printf ' playback\n playlist\n playmode\n database\n' | "${scriptDir}/xdm" "${@}")
+  act=$(printf '%s' "${act}" | awk -F ' ' '{print $2}')
+
+  case "${act}" in
+    playlist)
+      # insert\n load\n rm\n
+      plact=$(printf ' back\n add\n del\n crop\n shuffle\n show\n clear\n save\n lists\n' | "${scriptDir}/xdm" "${@}")
+      plact=$(printf '%s' "${plact}" | awk -F ' ' '{print $2}')
+      case "${plact}" in
+        add|del)
+          plSrch=''
+          plType=$(printf ' Artist\n Album\n Title' | "${scriptDir}/xdm" "${@}")
+
+          if test "${plType}" = ' Artist'; then
+            plArtist=$(mpc list artist | "${scriptDir}/xdm" -p ' Artist: ' "${@}")
+            test -n "${plArtist}" && plSrch="${plSrch}artist '${plArtist}' "
+          fi
+          
+          if test "${plType}" = ' Artist' || test "${plType}" = ' Album'; then
+            plAlbum=$(mpc list album "${plSrch}" | "${scriptDir}/xdm" -p ' Album: ' "${@}")
+            test -n "${plAlbum}" && plSrch="${plSrch}album '${plAlbum}' "
+          fi
+
+          if test "${plType}" = ' Album' || test "${plType}" = ' Title'; then
+            plTitle=$(mpc list title ${plSrch} | "${scriptDir}/xdm" -p ' Title: ' "${@}")
+            test -n "${plTitle}" && plSrch="${plSrch}title '${plTitle}' "
+          fi
+
+          numTitle=$(eval "mpc search ${plSrch}" | wc -l)
+
+          if test "${plact}" = 'add'; then
+            eval "mpc search ${plSrch}" | mpc add && notify-send -u 'low' " ${numTitle}+"
+          elif test "${plact}" = 'del'; then
+            mpc -f '%position%_%file%' playlist > /tmp/dm-mp-pl
+            eval mpc -f '_%file%' search ${plSrch} > /tmp/dm-mp-sng
+            pos=$(awk -F'_' 'NR==FNR{c[$2]++;next};c[$2] > 0' /tmp/dm-mp-sng /tmp/dm-mp-pl | awk -F '_' '{print $1}')
+            rm /tmp/dm-mp{pl,sng}
+            printf '%s\n' "${pos}" | mpc del && notify-send -u 'low' " ${numTitle}-"
+          fi
+
+          unset plSrch plType plArtist plAlbum plTitle numTitle 
+        ;;
+        clear) mpc clear && notify-send -u 'low' " clr";;
+        crop) mpc crop && notify-send -u 'low' " crp";;
+        show)
+          plSong=$(mpc playlist | "${scriptDir}/xdm" "${@}")
+          test -n "${plSong}" && plSongAct=$(printf ' play\n del\n' | "${scriptDir}/xdm" "${@}" | awk -F ' ' '{print $2}')
+          test -n "${plSongAct}" && plSongPos=$(mpc -f '%position%_%artist% - %title%' playlist | grep "${plSong}" | awk -F '_' '{print $1}')
+          test "${plSongAct}" = 'play' && mpc play "${plSongPos}" && notify-send -u 'low' " #${plSongPos}"
+          test "${plSongAct}" = 'del' && printf '%s\n' "${plSongPos}" | mpc del && notify-send -u 'low' " 1-"
+          unset plSong plSongAct plSongPos
+        ;;
+        shuffle) mpc shuffle && notify-send -u 'low' " rnd";;
+        save)
+          plList=$(printf '' | "${scriptDir}/xdm" "${@}")
+          test -n "${plList}" && mpc save "${plList}" && notify-send -u 'low' " svd"
+        ;;
+        lists)
+          plList=$(mpc lsplaylists | "${scriptDir}/xdm" "${@}")
+          test -n "${plList}" && plListAct=$(printf ' load\n rm\n' | "${scriptDir}/xdm" "${@}" | awk -F ' ' '{print $2}')
+          test "${plListAct}" = 'load' && mpc load "${plList}" && notify-send -u 'low' " ld"
+          test "${plListAct}" = 'rm' && mpc rm "${plList}" && notify-send -u 'low' " rm"
+          unset plList plListAct
+        ;;
+      esac
+      unset plact
+    ;;
+    playback)
+      pbact=$(printf ' back\n prev\n next\n pause\n play\n stop\n toggle\n seek\n volume\n' | "${scriptDir}/xdm" "${@}")
+      pbicn=$(printf '%s' "${pbact}" | awk -F ' ' '{print $1}')
+      pbact=$(printf '%s' "${pbact}" | awk -F ' ' '{print $2}')
+      case "${pbact}" in
+        pause|play|stop|toggle) mpc "${pbact}" && notify-send -u 'low' " ${pbact}";;
+        prev|next) mpc "${pbact}";; #&& notify-send -u 'low' "${pbicn}";;
+        seek|volume)
+          pbPerc=$(printf '5\n10\n15\n20\n25\n30\n35\n40\n45\n50\n55\n60\n65\n70\n75\n80\n85\n90\n95\n100\n' | "${scriptDir}/xdm" "${@}")
+          mpc "${pbact}" "${pbPerc}" && notify-send -u 'low' "${pbicn} ${pbPerc}%"
+        ;;
+      esac
+      unset pbact pbicn
+    ;;
+    playmode)
+      # seek\nvolume
+      pbact=$(printf ' back\n crossfade\n consume\n random\n repeat\n single\n' | "${scriptDir}/xdm" "${@}")
+      pbicn=$(printf '%s' "${pbact}" | awk -F ' ' '{print $1}')
+      pbact=$(printf '%s' "${pbact}" | awk -F ' ' '{print $2}')
+      case "${pbact}" in
+        consume|random|repeat|single) mpc "${pbact}" && notify-send -u 'low' "${pbicn} $(mpc | grep -o -E "${pbact}: (on|off)" | grep -o -E -w '(on|off)')";;
+        crossfade)
+          pbCross=$(printf '0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10' | "${scriptDir}/xdm" "${@}")
+          mpc "${pbact}" "${pbCross}" && notify-send -u 'low' "${pbicn} ${pbCross}s"
+        ;;
+      esac
+      unset pbact pbicn
+    ;;
+    database)
+      dbact=$(printf ' back\n update\n' | "${scriptDir}/xdm" "${@}")
+      dbicn=$(printf '%s' "${dbact}" | awk -F ' ' '{print $1}')
+      dbact=$(printf '%s' "${dbact}" | awk -F ' ' '{print $2}')
+      case "${dbact}" in
+        update) mpc "${dbact}" && notify-send -u 'low' "${dbicn} upd";;
+      esac
+      unset dbact dbicn
+    ;;
+  esac
+
+  test -z "${act}" && exit
+done
