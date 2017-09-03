@@ -1,12 +1,11 @@
 #!/bin/sh
 
 command_not_found_handle() {
-  >&2 echo '
-  ┌──────────────────┐
-  │ Unknown command! │
-  └──────────────────┘
-  The command '"${1}"' in '"${0}"' is unknown.
-'
+  >&2 echo -e '
+   Command not found
+  ──────────────────────────
+  Command:\t'${1}'
+  Source:\t'${0}
   return 127
 }
 
@@ -25,22 +24,23 @@ shell_prompt_handle() {
   PS1="\n"
   case "${PWD}" in
       /bin*|/boot*|/dev*|/etc*|/lib*|/lost+found*|/mnt*|/proc*|/run*|/sbin|/sys*|/usr*|/var*)
-        PS1+=" ° "
+        PS1+="  "
         ;;
       /home*)
-        PS1+=" ~ "
+        PS1+="  "
         ;;
       /root*)
-        PS1+=" # "
+        PS1+="  "
         ;;
       *)
-        PS1+=" : "
+        PS1+="  "
         ;;
   esac
 
   PS1+="\[\e[0;33m\]${bn}\[\e[0m\]"
 
-  test "${rc}" -eq 0 && PS1+=" $ " || PS1+=" ! "
+  test "${rc}" -ne 0 && PS1+="  "
+  PS1+="\n # "
 }
 
 export -f shell_prompt_handle

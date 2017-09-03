@@ -56,8 +56,12 @@ jl() {
 
 # Easy file/directory lister
 l() {
-  shopt -s nullglob 
-  (cd "${1:-$PWD}" && find * -maxdepth 0 -exec stat -c '%n %U:%G %a' {} \; | column -t | sed -e 's/^/   ▹ /')
+  shopt -s nullglob
+  # \[\e[0;33m\]${bn}\[\e[0m\]
+  (
+    cd "${1:-$PWD}"
+    echo -e "$(find * -maxdepth 0 -exec stat -c '\e[0;33m%n\e[0m %U:%G \e[0;32m%a\e[0m' {} \; | column -t | sed -e 's/^/  /')"
+  )
   shopt -u nullglob
 }
 

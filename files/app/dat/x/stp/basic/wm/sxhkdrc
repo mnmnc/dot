@@ -51,11 +51,11 @@ super + ctrl + period
 
 # clock notify
 super + alt + c
-  clk
+  notify-send -u low "$(clk)"
 
 # weather notify
 super + alt + w
-  wtr
+  notify-send -u low "$(wtr)"
 
 # screenshot desktop
 super + Print

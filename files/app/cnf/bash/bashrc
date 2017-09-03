@@ -9,7 +9,7 @@ source "${HOME}/app/sec/api-keys"
 
 # setup variables
 SETUP_NAME='basic'
-THEME_NAME='lake-toba'
+THEME_NAME='hotel'
 
 # override path by user and setup executeables
 PATH="${PATH}:${HOME}/dot/utils:${HOME}/app/cnf/x/lib:${HOME}/app/dat/x/stp/${SETUP_NAME}/exe:${HOME}/app/dat/x/stp/${SETUP_NAME}/wm2"

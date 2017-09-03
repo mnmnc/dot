@@ -17,4 +17,4 @@ case "${weather}" in
   Snow) wtIcon="";;
   Thunderstorm|Storm) wtIcon="";;
 esac
-notify-send -u 'low' "${wtIcon} ${temp}°C"
+printf '%s %s°C\n' "${wtIcon}" "${temp}"
