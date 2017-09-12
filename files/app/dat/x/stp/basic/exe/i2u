@@ -21,7 +21,8 @@ case "${act}" in
   c|con|connect)
     if test -f "${II_PID}"; then
       pid=$(cat "${II_PID}")
-      kill -0 "${pid}" && kill "${pid}"; printf '[%s] Killed old ii as "%s"...\n' "$(date +'%X')" "${pid}"
+      kill -0 "${pid}" 2>&1 >/dev/null && kill "${pid}"; printf '[%s] Killed old ii as "%s"...\n' "$(date +'%X')" "${pid}"
+      rm "${II_PID}"
     fi
     test -z "${II_SERVER}" && printf 'Missing server!' && exit 1
     test -z "${II_NICK}" && printf 'Missing nick!' && exit 1
@@ -31,9 +32,9 @@ case "${act}" in
     printf '%s' "${pid}" > "${II_PID}"
     test -z "${II_PASS}" && read -p 'Password: ' II_PASS && test -z "${II_PASS}" && printf 'Missing password!' && exit 1
     printf '[%s] Identifying as "%s"...\n' "$(date +'%X')" "${II_NICK}"
-    test -f "${II_DIR}/${II_SERVER}/nickserv/out" && rm "${II_DIR}/${II_SERVER}/nickserv/out"
+    #test -f "${II_DIR}/${II_SERVER}/nickserv/out" && rm "${II_DIR}/${II_SERVER}/nickserv/out"
     printf "identify %s\n" "${II_PASS}" > "${II_DIR}/${II_SERVER}/nickserv/in"
-    tail -f "${II_DIR}/${II_SERVER}/nickserv/out" | while read ll; do
+    tail -n 0 -f "${II_DIR}/${II_SERVER}/nickserv/out" | while read ll; do
       if printf '%s' "${ll}" | grep -q 'You are now identified'; then
         pkill -P $$ tail
       elif printf '%s' "${ll}" | grep -q 'Invalid password'; then
@@ -49,12 +50,12 @@ case "${act}" in
       #fi
     done
     printf '[%s] Indentified\n' "$(date +'%X')"
-    test -z "${II_CHANNEL}" || (
+    if ! test -z "${II_CHANNEL}"; then
       printf '[%s] Joining channels\n' "$(date +'%X')"
       for chn in ${II_CHANNEL}; do
         printf '/join #%s\n' > "${II_DIR}/${II_SERVER}/in"
       done
-    )
+    fi
     printf '[%s] Finished\n' "$(date +'%X')"
   ;;
   j|join)

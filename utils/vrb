@@ -25,6 +25,11 @@ vrb_sync() {
   test -d /${tgt}/home || mkdir /${tgt}/home
   test -d /${tgt}/${src} || mkdir /${tgt}/${src}
   test -d /${tgt}/boot || mkdir /${tgt}/boot
+
+  # Make backup most important root dirs invulnerable
+  printf '[%s] Unprotecting %s/etc & %s/etc ...\n' "$(date +'%X')" "/${tgt}" "/${tgt}"
+  chattr -R -i "/${tgt}/etc" >/dev/null 2>&1
+  chattr -R -i "/${tgt}/usr" >/dev/null 2>&1
   
   # Sync root files & folders to ${tgt}
   printf '[%s] Syncing files ...\n' "$(date +'%X')"
@@ -34,6 +39,13 @@ vrb_sync() {
   # Mount ${src} folder on fstab
   printf '[%s] Fixing fstab ...\n' "$(date +'%X')"
   sed -i "s|${tgt}|${src}|g" /${tgt}/etc/fstab
+
+  # Make backup most important root dirs invulnerable
+  printf '[%s] Protecting %s/etc & %s/etc ...\n' "$(date +'%X')" "/${tgt}" "/${tgt}"
+  chattr -R +i "/${tgt}/etc" >/dev/null 2>&1
+  chattr -R +i "/${tgt}/usr" >/dev/null 2>&1
+
+  return 0
 }
 
 test -z "${1}" && exit 1

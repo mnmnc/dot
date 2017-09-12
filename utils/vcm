@@ -1,0 +1,122 @@
+#!/bin/sh
+# void-container-manager
+
+vcm_attach() {
+  test -z "${cntName}" && cntName="${1}" && shift
+  test -z "${cntDir}" && cntDir="/data/vrt/cnt/${cntName}"
+
+  if test ! -d "${cntDir}"; then
+    printf '[%s] Container %s does not exist!\n' "$(date +'%X')" "${cntName}"
+    exit 1
+  fi
+
+  if ! test -f "${cntDir}/pid" || ! kill -0 $(cat "${cntDir}/pid") > /dev/null 2>&1; then
+    printf '[%s] Container %s is not running!\n' "$(date +'%X')" "${cntName}"
+    exit 1
+  fi
+
+  printf '[%s] Resuming screen %s ...\n' "$(date +'%X')" "cnt-${cntName}"
+  screen -r "cnt-${cntName}"
+
+  if ! kill -0 $(cat "${cntDir}/pid") > /dev/null 2>&1 ; then
+    printf '[%s] Screen %s closed!\n' "$(date +'%X')" "cnt-${cntName}"
+    rm "${cntDir}/pid"
+  fi
+}
+
+vcm_create() {
+  test -z "${cntName}" && cntName="${1:-$(date +'%Y%m%d-%H%M%S')}"
+  test -z "${cntDir}" && cntDir="/data/vrt/cnt/${cntName}"
+
+  if test -d "${cntDir}"; then
+    printf '[%s] Container %s already exists!\n' "$(date +'%X')" "${cntName}"
+    exit 1
+  fi
+
+  printf '[%s] Creating container directory %s ...\n' "$(date +'%X')" "${cntDir}"
+  sudo mkdir -p "${cntDir}" || exit 1
+
+  printf '[%s] Setting permissions on %s to %s:%s ...\n' "$(date +'%X')" "${cntName}" "${USER}" "${USER}"
+  sudo chown -R "${USER}:${USER}" "${cntDir}" || exit 1
+
+  printf '[%s] Entering container %s ...\n' "$(date +'%X')" "${cntName}"
+  cd "${cntDir}" || exit 1
+
+  printf '[%s] Creating container image ...\n' "$(date +'%X')"
+  tar -c -f - -C / usr | pseudo tar -x -f -
+
+  printf '[%s] Creating symlinks ...\n' "$(date +'%X')"
+  ln -s usr/bin bin
+  ln -s usr/lib lib
+  ln -s usr/lib lib64
+  ln -s usr/lib32 lib32
+  ln -s usr/sbin sbin
+}
+
+vcm_inject() {
+  test -z "${cntName}" && cntName="${1}" && shift
+  test -z "${cntDir}" && cntDir="/data/vrt/cnt/${cntName}"
+
+  if test ! -d "${cntDir}"; then
+    printf '[%s] Container %s does not exist!\n' "$(date +'%X')" "${cntName}"
+    exit 1
+  fi
+
+  if ! test -f "${cntDir}/pid" || ! kill -0 $(cat "${cntDir}/pid") > /dev/null 2>&1; then
+    printf '[%s] Container %s is not running!\n' "$(date +'%X')" "${cntName}"
+    exit 1
+  fi
+
+  printf '[%s] Injecting into %s with %s \n' "$(date +'%X')" "${cntName}" "${@}"
+  inject $(cat "${cntDir}/pid") ${@}
+}
+
+vcm_list() {
+  printf '[%s] Listing containers ...\n' "$(date +'%X')"
+  find '/data/vrt/cnt' -mindepth 1 -maxdepth 1 -type d | sed 's|/data/vrt/cnt/||g'
+}
+
+vcm_run() {
+  test -z "${cntName}" && cntName="${1}" && shift
+  test -z "${cntDir}" && cntDir="/data/vrt/cnt/${cntName}"
+
+  if test ! -d "${cntDir}"; then
+    printf '[%s] Container %s does not exist!\n' "$(date +'%X')" "${cntName}"
+    exit 1
+  fi
+
+  if test -f "${cntDir}/pid"; then
+    cntPID=$(cat "${cntDir}/pid")
+    kill -0 "${cntPID}" > /dev/null 2>&1 || rm "${cntDir}/pid"
+  fi
+
+  if test -f "${cntDir}/pid"; then
+    printf '[%s] Container %s already running under PID %s ...\n' "$(date +'%X')" "${cntName}" "${cntPID}"
+    printf '[%s] Resume screen session %s!\n' "$(date +'%X')" "cnt-${cntName}"
+    exit 1
+  fi
+
+  printf '[%s] Running container as screen session %s ...\n' "$(date +'%X')" "cnt-${cntName}"
+  (cd "${cntDir}" && screen -d -m -S "cnt-${cntName}" /bin/sh -c 'contain . /bin/sh' && sleep 0.1)
+
+  cntPID=$(screen -ls "cnt-${cntName}" | grep 'tached' | awk -F '.' '{print $1}' | grep -o '[0-9]*')
+  if test -z "${cntPID}"; then
+    printf '[%s] Container %s did not start!\n' "$(date +'%X')" "${cntName}"
+    test -f "${cntDir}/pid" && rm "${cntDir}/pid"
+    exit 1
+  fi
+  printf '[%s] Screen %s running as PID %s ...\n' "$(date +'%X')" "cnt-${cntName}" "${cntPID}"
+  printf '%s' "${cntPID}" > "${cntDir}/pid"
+}
+
+test -z "${1}" && exit 1
+act="${1}"; shift
+
+case "${act}" in
+  a) vcm_attach ${@};;
+  c) vcm_create ${@};;
+  d) vcm_destroy ${@};;
+  l) vcm_list ${@};;
+  #i) vcm_inject ${@};; # buggy!
+  r) vcm_run ${@};;
+esac

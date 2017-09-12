@@ -1,8 +1,9 @@
 #!/bin/sh
 
+test -d "${NOTIFY_DIR}" || mkdir "${NOTIFY_DIR}"
 test -e "${NOTIFY_FIFO}" && rm -f "${NOTIFY_FIFO}"
 test -f "${NOTIFY_CACHE}" || touch "${NOTIFY_CACHE}"
-mkfifo "${NOTIFY_FIFO}" && trap "rm -f ${NOTIFY_FIFO}" EXIT
+mkfifo "${NOTIFY_FIFO}" && trap "rm -f ${NOTIFY_FIFO} ${NOTIFY_CACHE}" EXIT
 
 addToCache() {
   grep -q "${1}" "${NOTIFY_CACHE}" && return 1

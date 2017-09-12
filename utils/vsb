@@ -1,6 +1,9 @@
 #!/bin/sh
 # void-system-backup
 
+scriptDir=$(dirname `realpath -P "$0"`)
+parentDir=$(dirname "${scriptDir}")
+
 vsb_create () {
   test -d /data || exit 1
 
@@ -56,10 +59,24 @@ vsb_create () {
   fi
 
   printf '[%s] Creating root fs backup ...\n' "$(date +'%X')"
-  borg create "/data/bak/system::${dateTime}" /etc /msc /root /usr /var
+  borg create --exclude-from "${parentDir}/conf/vsb.ignore" "/data/bak/system::${dateTime}" /etc /msc /root /usr /var
 
   printf '[%s] Cleaning up ...\n' "$(date +'%X')"
   rm -r /msc
+}
+
+vsb_dryrun() {
+  dateTime="$(date +'%Y%m%d-%H%M%S')"
+  borg create -v --list --dry-run --exclude-from "${parentDir}/conf/vsb.ignore" "/data/bak/system::${dateTime}" /etc /root /usr /var
+}
+
+vsb_info() {
+  vsb_list
+
+  printf '[%s] Choose target backup ...\n' "$(date +'%X')"
+  read -p ': ' answ
+
+  borg info "/data/bak/system::${answ}"
 }
 
 vsb_list () {
@@ -79,6 +96,8 @@ vsb_restore () {
 
   printf '[%s] Choose restore backup ...\n' "$(date +'%X')"
   read -p ': ' answ
+
+  borg extract "/data/bak/system::${answ}"
 }
 
 test -z "${1}" && exit 1
@@ -86,6 +105,8 @@ act="${1}"; shift
 
 case "${act}" in
   c) vsb_create ${@};;
+  d) vsb_dryrun ${@};;
+  i) vsb_info ${@};;
   l) vsb_list ${@};;
   m) vsb_mount ${@};;
   r) vsb_restore ${@};;

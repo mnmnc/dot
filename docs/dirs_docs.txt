@@ -74,7 +74,7 @@
       ├── dev (development)
       ├── pkg (packages)
   ├── usr (user)
-  	  ├── acd (Amazon Cloud Drive)
+  	  ##├── acd (Amazon Cloud Drive)
     		  ├── user-configs
     		  ├── user-data
     		  ├── system-configs

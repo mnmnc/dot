@@ -4,5 +4,5 @@
 while :; do
   clear
   read -p 'Say: ' line
-  printf '%s\n' "${line}" | i2w "${@}"
+  printf '%s\n' "${line}" | i2w "${@}" || exit 1
 done

@@ -2,10 +2,11 @@
 
 command_not_found_handle() {
   >&2 echo -e '
-   Command not found
-  ──────────────────────────
-  Command:\t'${1}'
-  Source:\t'${0}
+  ───────────────────────────
+   Command not found
+  ───────────────────────────
+  Command:\t\e[0;31m'${1}'\e[0m
+  Source:\t\e[0;31m'${0}'\e[0m'
   return 127
 }
 
@@ -13,34 +14,55 @@ export -f command_not_found_handle
 
 shell_prompt_handle() {
   rc=$?
+  PS1=""
   bn=$(basename "${PWD}")
+  bl="${#bn}"
+
+  if test "${rc}" -ne 0; then
+    PS1+="\n  ───────────────────────────\n"
+    PS1+="   Command ended with rc \[\e[0;31m\]${rc}\[\e[0m\]\n"
+  fi
 
   # If PWD is directly under root (/),
   # also display the /
-  if test "${PWD}" == "/${bn}"; then
-    bn="${PWD}"
-  fi
+  #if test "${PWD}" == "/${bn}"; then
+  #  bn="${PWD}"
+  #fi
 
-  PS1="\n"
-  case "${PWD}" in
-      /bin*|/boot*|/dev*|/etc*|/lib*|/lost+found*|/mnt*|/proc*|/run*|/sbin|/sys*|/usr*|/var*)
-        PS1+="  "
-        ;;
-      /home*)
-        PS1+="  "
-        ;;
-      /root*)
-        PS1+="  "
-        ;;
-      *)
-        PS1+="  "
-        ;;
-  esac
+  PS1+="\n"
+  # case "${PWD}" in
+  #     /bin*|/boot*|/dev*|/etc*|/lib*|/lost+found*|/mnt*|/proc*|/run*|/sbin|/sys*|/usr*|/var*)
+  #       PS1+=" ⚙ "
+  #       ;;
+  #     /home*)
+  #       PS1+=" ♥ "
+  #       ;;
+  #     *)
+  #       PS1+=" ★ "
+  #       ;;
+  # esac
 
-  PS1+="\[\e[0;33m\]${bn}\[\e[0m\]"
+  #┏━
+  #┃
+  #┗━
 
-  test "${rc}" -ne 0 && PS1+="  "
-  PS1+="\n # "
+  # PS1+="┌─"
+  # PS1+=$(printf '%*s' "${bl}" | sed "s| |─|g")
+  # PS1+="─┐"
+  # PS1+="\n│ "
+  # PS1+="\[\e[0;33m\]${bn}\[\e[0m\]"
+  # PS1+=" │"
+  # PS1+="\n└─"
+  # PS1+=$(printf '%*s' "${bl}" | sed "s| |─|g")
+  # PS1+="─┴» "
+
+  # PS1+="│ \[\e[0;33m\]${bn}\[\e[0m\]"
+  # PS1+="\n└─» "
+
+  PS1+=" \[\e[0;33m\]${bn}\[\e[0m\] » "
+
+  #test "${rc}" -ne 0 && PS1+=" ⚡ "
+  #PS1+="\n » "
 }
 
 export -f shell_prompt_handle
@@ -50,17 +72,9 @@ export PROMPT_COMMAND='shell_prompt_handle'
 prompt_message_handle() {
   clear
 
-  cat <<EOF
-
-    Welcome to
-   __     __    _     _   _     _ 
-   \ \   / /__ (_) __| | | |   (_)_ __  _   ___  __
-    \ \ / / _ \| |/ _' | | |   | | '_ \| | | \ \/ /
-     \ V / (_) | | (_| | | |___| | | | | |_| |>  < 
-      \_/ \___/|_|\__,_| |_____|_|_| |_|\__,_/_/\_\\
-
-        # $(date +"%x %X") - ${USER} @ ${HOSTNAME}
-EOF
+  printf '\n   Welcome to\n\e[0;33m'
+  cat ~/app/cnf/x/logo
+  printf '\n\e[0m          %s @ %s - %s\n' "${USER}" "${HOSTNAME}" "$(date +'%x %X')"
 }
 
 export -f prompt_message_handle

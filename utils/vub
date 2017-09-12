@@ -1,12 +1,14 @@
 #!/bin/sh
 # void-user-backup
 
+scriptDir=$(dirname `realpath -P "$0"`)
+parentDir=$(dirname "${scriptDir}")
 test -z "${usrName}" && usrName=$(logname)
+usrDir="/home/${usrName}"
 
 vub_create () {
   test -d /data || exit 1
-  usrDir="/home/${usrName}"
-
+  
   if ! test -d "${usrDir}/msc"; then
     printf '[%s] Preparing cache ...\n' "$(date +'%X')"
     mkdir -p "${usrDir}/msc"
@@ -24,11 +26,7 @@ vub_create () {
 
   printf '[%s] Starting backup ...\n' "$(date +'%X')"
   dateTime="$(date +'%Y%m%d-%H%M%S')"
-  printf '%s' "${dateTime}" > "${usrDir}/lock"
-
-  #if test -d "${usrDir}/.ssh"; then
-  #  printf '[%s] Backing up ssh ...\n' "$(date +'%X')"
-  #fi
+  printf '%s' "${dateTime}" > "${usrDir}/msc/lock"
 
   printf '[%s] Compressing backup ...\n' "$(date +'%X')"
   tar cfz "${usrDir}/msc/user-data.tar.gz" "${usrDir}/msc/"
@@ -47,10 +45,24 @@ vub_create () {
   fi
 
   printf '[%s] Creating user fs backup ...\n' "$(date +'%X')"
-  borg create "/data/bak/users::${usrName}@${dateTime}" "${usrDir}/app" "${usrDir}/exe" "${usrDir}/iod" "${usrDir}/msc" "${usrDir}/src" "${usrDir}/usr"
+  borg create --exclude-from "${parentDir}/conf/vub.ignore" "/data/bak/users::${usrName}@${dateTime}" "${usrDir}/app" "${usrDir}/dot" "${usrDir}/msc" "${usrDir}/usr"
 
   printf '[%s] Cleaning up ...\n' "$(date +'%X')"
   rm -r "${usrDir}/msc"
+}
+
+vub_dryrun() {
+  dateTime="$(date +'%Y%m%d-%H%M%S')"
+  borg create -v --list --dry-run --exclude-from "${parentDir}/conf/vub.ignore" "/data/bak/users::${usrName}@${dateTime}" "${usrDir}/app" "${usrDir}/dot" "${usrDir}/msc" "${usrDir}/usr"
+}
+
+vub_info() {
+  vub_list
+
+  printf '[%s] Choose target backup ...\n' "$(date +'%X')"
+  read -p ': ' answ
+
+  borg info "/data/bak/users::${answ}"
 }
 
 vub_list () {
@@ -70,6 +82,8 @@ vub_restore () {
 
   printf '[%s] Choose restore backup ...\n' "$(date +'%X')"
   read -p ': ' answ
+
+  borg extract "/data/bak/users::${answ}"
 }
 
 test -z "${1}" && exit 1
@@ -77,6 +91,8 @@ act="${1}"; shift
 
 case "${act}" in
   c) vub_create ${@};;
+  d) vub_dryrun ${@};;
+  i) vub_info ${@};;
   l) vub_list ${@};;
   m) vub_mount ${@};;
   r) vub_restore ${@};;

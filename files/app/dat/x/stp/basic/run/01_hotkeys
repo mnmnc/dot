@@ -1,4 +1,4 @@
 #!/bin/sh
 
 #test "${DRY_RUN}" = 'n' && sxhkd -c "${HOME}/app/cnf/sxhkd/sxhkdrc" &
-test "${DRY_RUN}" = 'n' && sxhkd -c "${HOME}/app/dat/x/stp/basic/wm/sxhkdrc" &
+test "${DRY_RUN}" = 'n' && sxhkd -c "${HOME}/app/dat/x/stp/basic/cnf/sxhkdrc" &

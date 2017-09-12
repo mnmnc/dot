@@ -1,12 +1,11 @@
 #!/bin/sh
 # dots-init-dirs
 
-mkdir -p ~/app ~/dot ~/exe ~/iod ~/src ~/tmp ~/usr
+mkdir -p ~/app ~/dev ~/dot ~/exe ~/iod ~/tmp ~/usr
 
 (cd ~/app; mkdir cnf dat log sec)
 (cd ~/iod; mkdir bkp ftp prt scn tsh)
-(cd ~/src; mkdir dev pkg)
-(cd ~/usr; mkdir -p acd doc/{prv,pub,tpl,wrk} dsk mls/{prv,pub,tpl,wrk} med pub tmp/dls)
+(cd ~/usr; mkdir -p doc/{prv,pub,tpl,wrk} dsk mls/{prv,pub,tpl,wrk} med pub tmp/dls)
 (cd ~/usr/med; mkdir -p aud/{imp,rec,sng} img/{msc,rec,wpr} mov/{cin,msc,sec,ser} pls)
 
 #ln -s ~/app/cnf/bash/bashrc ~/.bashrc

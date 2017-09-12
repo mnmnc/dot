@@ -46,7 +46,7 @@ mkdir -p /mnt/data
 mount /dev/mapper/lvm-data /mnt/data
 mkdir -p /mnt/data/users
 mkdir -p /mnt/data/trash
-mkdir -p /mnt/data/share/{cnt,vms}
+mkdir -p /mnt/data/virt/{cnt,vms}
 
 mkdir -p /mnt/var/db/xbps/keys /mnt/usr/share
 cp -a /usr/share/xbps.d /mnt/usr/share/
@@ -88,7 +88,11 @@ more /etc/dracut.conf.d/10-crypt.conf
 
 mkdir -p /boot/grub
 
+echo -e 'GRUB_DISABLE_SUBMENU=true' >> /etc/default/grub
+echo -e 'GRUB_DISABLE_OS_PROBER=true' >> /etc/default/grub
 echo -e 'GRUB_CMDLINE_LINUX="cryptdevice=/dev/sda2 rd.luks=1 rd.luks.uuid='"$UUID"' rd.luks.crypttab=1 rd.lvm=1 rd.md=0 rd.dm=0 lang=de locale=de_DE.UTF-8" pci=nomsi elevator=deadline' >> /etc/default/grub
+
+echo -e '#!/bin/sh\nvbf' /etc/grub.d/40_custom
 
 more /etc/default/grub
 

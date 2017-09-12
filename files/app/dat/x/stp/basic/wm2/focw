@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 
 if echo "${1}" | grep -q '0x'; then
+  #notify-send "Focus request ${1}"
   curID=$(pfw || echo 'NONE')
   winID="${1}"
 else

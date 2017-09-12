@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+
+# restw: restore window
+
+test -d "${WM_RESTORE}" || mkdir -p "${WM_RESTORE}"
+
+main() {
+  winAct=${1}
+  shift || exit
+  winIDs="${@}"
+
+  if test "${winAct}" = 'cln'; then
+    for winID in $(cd "${WM_RESTORE}"; find -name "0x[0-9]*" | tr -d './'); do
+      wattr "${winID}" || rm "${WM_RESTORE}/${winID}"
+    done
+    exit
+  fi
+
+  for winID in $(echo "${winIDs}"); do
+    winBak="${WM_RESTORE}/${winID}"
+    case "${winAct}" in
+      'b') printf '%s' "$(wattr xywh ${winID})" > "${winBak}";;
+      'r') 
+        test -f "${winBak}" || continue
+        winCrd=$(cat "${winBak}")
+        wtp ${winCrd} "${winID}"
+        imxw "${winID}" && chwb -s 0 "${winID}" || chwb -s "${WIN_BORDER}" "${winID}"
+        wtp ${winCrd} "${winID}"
+      ;;
+    esac
+  done
+}
+
+main ${@}

@@ -1,0 +1,17 @@
+#!/bin/sh
+# void-boot-fix
+
+kernelVers=$(vkpurge list | sort -n | tail -n 1)
+bootUUID=$(blkid -o value -s UUID /dev/sda1)
+rootUUID=$(blkid -o value -s UUID /dev/sda2)
+
+cat <<EOT
+  menuentry 'Void-Backup (on /dev/mapper/lvm-copy)' --class void --class gnu-linux --class gnu --class os $menuentry_id_option 'VoidLinux-Backup' {
+    insmod part_msdos
+    insmod ext2
+    set root='hd0,msdos1'
+    search --no-floppy --fs-uuid --set=root ${bootUUID}
+    linux /vmlinuz-${kernelVers} root=/dev/mapper/lvm-copy ro cryptdevice=/dev/sda2 rd.luks=1 rd.luks.uuid=${rootUUID} rd.luks.crypttab=1 rd.lvm=1 rd.dm=0 lang=de locale=de_DE.UTF-8 pci=nomsi elevator=deadline loglevel=4 slub_debug=P page_poison=1
+    initrd /initramfs-${kernelVers}.img
+  }
+EOT

@@ -4,9 +4,9 @@
 while IFS=: read ev wid; do
   case $ev in
     16) wattr o $wid || snaw c $wid;; # window creation
-    18) grpw cln; wattr $(pfw) || focw his p;; # focus next window when deleting focused window
+    18) grpw cln; rstw cln; wattr $(pfw) || focw his p;; # focus next window when deleting focused window
     19) wattr o $wid || focw $wid;; # mapping requests
-    7) wattr o $wid || wtf $wid;; # entering window
+    7) wattr o $wid || focw $wid;; # entering window
   esac
 done
 

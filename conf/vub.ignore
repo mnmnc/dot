@@ -1,0 +1,4 @@
+*/usr/med/*
+*.log
+*.tmp
+*.lock

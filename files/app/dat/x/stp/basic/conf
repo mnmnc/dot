@@ -2,11 +2,13 @@
 
 eval $(x2v)
 
-export NOTIFY_FIFO='/tmp/notify-fifo'
-export NOTIFY_CACHE='/tmp/notify-cache'
+export NOTIFY_DIR="/tmp/notify"
+export NOTIFY_FIFO="${NOTIFY_DIR}/fifo"
+export NOTIFY_CACHE="${NOTIFY_DIR}/cache"
 
 export WM_TMP="/tmp/wm"
 export WM_GROUPS="${WM_TMP}/groups"
+export WM_RESTORE="${WM_TMP}/restore"
 
 export PAD_TOP="${PAD_TOP:-20}"
 export PAD_BOT="${PAD_BOT:-0}"
