@@ -1,17 +1,13 @@
 #!/bin/sh
 # void-container-manager
 
+scriptDir=$(dirname `realpath -P "$0"`)
+parentDir=$(dirname "${scriptDir}")
+
 vcm_attach() {
-  test -z "${cntName}" && cntName="${1}" && shift
-  test -z "${cntDir}" && cntDir="/data/vrt/cnt/${cntName}"
-
-  if test ! -d "${cntDir}"; then
-    printf '[%s] Container %s does not exist!\n' "$(date +'%X')" "${cntName}"
-    exit 1
-  fi
-
   if ! test -f "${cntDir}/pid" || ! kill -0 $(cat "${cntDir}/pid") > /dev/null 2>&1; then
     printf '[%s] Container %s is not running!\n' "$(date +'%X')" "${cntName}"
+    test -f "${cntDir}/pid" && rm "${cntDir}/pid"
     exit 1
   fi
 
@@ -26,7 +22,6 @@ vcm_attach() {
 
 vcm_create() {
   test -z "${cntName}" && cntName="${1:-$(date +'%Y%m%d-%H%M%S')}"
-  test -z "${cntDir}" && cntDir="/data/vrt/cnt/${cntName}"
 
   if test -d "${cntDir}"; then
     printf '[%s] Container %s already exists!\n' "$(date +'%X')" "${cntName}"
@@ -42,26 +37,69 @@ vcm_create() {
   printf '[%s] Entering container %s ...\n' "$(date +'%X')" "${cntName}"
   cd "${cntDir}" || exit 1
 
-  printf '[%s] Creating container image ...\n' "$(date +'%X')"
-  tar -c -f - -C / usr | pseudo tar -x -f -
+  if test 1 -eq 1; then
+    printf '[%s] Copying xbps-confs ...\n' "$(date +'%X')"
+    mkdir -p "${cntDir}/var/db/xbps/keys" "${cntDir}/usr/share"
+    cp -a /usr/share/xbps.d "${cntDir}/usr/share/"
+    cp /var/db/xbps/keys/*.plist "${cntDir}/var/db/xbps/keys"
 
-  printf '[%s] Creating symlinks ...\n' "$(date +'%X')"
-  ln -s usr/bin bin
-  ln -s usr/lib lib
-  ln -s usr/lib lib64
-  ln -s usr/lib32 lib32
-  ln -s usr/sbin sbin
+    printf '[%s] Installing base-files ...\n' "$(date +'%X')"
+    xbps-install -r "${cntDir}" -Sy base-files > "${cntDir}/vcm.log" || exit 1
+
+    printf '[%s] Configuring base-files ...\n' "$(date +'%X')"
+    xbps-reconfigure -r "${cntDir}" -f base-files > "${cntDir}/vcm.log" || exit 1
+
+    printf '[%s] Installing remaining packages from %s ...\n' "$(date +'%X')" "${cntPkgs}"
+    xbps-install -r "${cntDir}" -y $(cat "${cntPkgs}" | tr '\n' ' ') > "${cntDir}/vcm.log" || exit 1
+
+    test -f "${cntDir}/vcm.log" && rm "${cntDir}/vcm.log"
+    #for pkgName in $(cat "${cntPkgs}"); do
+    #  printf '[%s] Installing %s ...\n' "$(date +'%X')" "${pkgName}"
+    #  xbps-install -r "${cntDir}" "${pkgName}"
+    #done
+  else
+    printf '[%s] Creating container image ...\n' "$(date +'%X')"
+    tar -c -f - -C / usr | pseudo tar -x -f -
+
+    printf '[%s] Creating symlinks ...\n' "$(date +'%X')"
+    ln -s usr/bin bin
+    ln -s usr/lib lib
+    ln -s usr/lib lib64
+    ln -s usr/lib32 lib32
+    ln -s usr/sbin sbin
+  fi
+}
+
+vcm_destroy() {
+  printf '[%s] Are you sure to destroy %s? ...\n' "$(date +'%X')" "${cntName}"
+  read -p ': ' answ
+
+  case "${answ}" in
+    y|Y|yes|YES) sudo rm -rf "${cntDir}"; printf '[%s] Container %s has been destroyed ...\n' "$(date +'%X')" "${cntName}";;
+  esac
+}
+
+vcm_help() {
+  cat <<EOT
+Usage: $(basename $0) <action> [opts]
+
+ACTIONS
+  [a]ttach      Attach to a running container session
+  [c]reate      Create a new container
+  [d]estroy     Destroy existing container
+  [i]nstall     Install pkg in container
+  [l]ist        List all existing containers
+  [r]un         Run container
+  [s]top        Stop container
+  [u]ninstall   Uninstall pkg from container
+
+ENV-VARS
+  cntName, cntDir, cntPkgs
+EOT
+  exit 1
 }
 
 vcm_inject() {
-  test -z "${cntName}" && cntName="${1}" && shift
-  test -z "${cntDir}" && cntDir="/data/vrt/cnt/${cntName}"
-
-  if test ! -d "${cntDir}"; then
-    printf '[%s] Container %s does not exist!\n' "$(date +'%X')" "${cntName}"
-    exit 1
-  fi
-
   if ! test -f "${cntDir}/pid" || ! kill -0 $(cat "${cntDir}/pid") > /dev/null 2>&1; then
     printf '[%s] Container %s is not running!\n' "$(date +'%X')" "${cntName}"
     exit 1
@@ -71,20 +109,16 @@ vcm_inject() {
   inject $(cat "${cntDir}/pid") ${@}
 }
 
+vcm_install() {
+  xbps-install -r "${cntDir}" ${@}
+}
+
 vcm_list() {
   printf '[%s] Listing containers ...\n' "$(date +'%X')"
   find '/data/vrt/cnt' -mindepth 1 -maxdepth 1 -type d | sed 's|/data/vrt/cnt/||g'
 }
 
 vcm_run() {
-  test -z "${cntName}" && cntName="${1}" && shift
-  test -z "${cntDir}" && cntDir="/data/vrt/cnt/${cntName}"
-
-  if test ! -d "${cntDir}"; then
-    printf '[%s] Container %s does not exist!\n' "$(date +'%X')" "${cntName}"
-    exit 1
-  fi
-
   if test -f "${cntDir}/pid"; then
     cntPID=$(cat "${cntDir}/pid")
     kill -0 "${cntPID}" > /dev/null 2>&1 || rm "${cntDir}/pid"
@@ -109,14 +143,41 @@ vcm_run() {
   printf '%s' "${cntPID}" > "${cntDir}/pid"
 }
 
-test -z "${1}" && exit 1
+vcm_stop() {
+  printf '[%s] Stopping container %s ...\n' "$(date +'%X')" "${cntName}"
+  screen -X -S "cnt-${cntName}" quit
+}
+
+vcm_uninstall() {
+  xbps-remove -r "${cntDir}" -R ${@} | sed 's|^Removing|Removing (cnt)|g'
+}
+
+test $# -eq 0 && vcm_help
 act="${1}"; shift
+
+test -z "${cntName}" && test $(dirname "${PWD}") = '/data/vrt/cnt' && cntName=$(basename "${PWD}")
+
+if test -z "${cntName}" && test $# -gt 0; then
+  cntName="${1}"
+  shift
+fi
+
+test -z "${cntDir}" && cntDir="/data/vrt/cnt/${cntName}"
+
+if test ! -d "${cntDir}" && test "${act}" != 'c' && test "${act}" != 'l'; then
+  printf '[%s] Container %s does not exist!\n' "$(date +'%X')" "${cntName}"
+  exit 1
+fi
+
+test -z "${cntPkgs}" && cntPkgs="${parentDir}/conf/cnt.pkgs"
 
 case "${act}" in
   a) vcm_attach ${@};;
   c) vcm_create ${@};;
   d) vcm_destroy ${@};;
+  i) vcm_install ${@};;
   l) vcm_list ${@};;
-  #i) vcm_inject ${@};; # buggy!
   r) vcm_run ${@};;
+  s) vcm_stop ${@};;
+  u) vcm_uninstall ${@};;
 esac

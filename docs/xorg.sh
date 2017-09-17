@@ -8,8 +8,8 @@
 xbps-install xorg-minimal xf86-video-intel xf86-video-amdgpu #xf86-video-ati # xorg-server xauth xinit xf86-input-evdev
 xbps-install xorg-fonts xorg-apps xclip xdo xwininfo xorg-input-drivers ttf-ubuntu-font-family font-awesome
 # Only in VBox-Install: xbps-install virtualbox-ose-guest
-#xbps-install bspwm sxhkd
-xbps-install howm
+xbps-install wmutils sxhkd
+#xbps-install howm
 xbps-install dbus dbus-x11 libnotify 
 xbps-install xrandr compton 
 xbps-install st feh dmenu dunst lemonbar-xft maim ffmpeg slock
