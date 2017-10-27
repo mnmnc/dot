@@ -1,0 +1,10 @@
+#!/bin/sh
+# dots-create-list
+
+scriptDir=$(dirname `realpath -P "$0"`)
+parentDir=$(dirname "${scriptDir}")
+
+# > "${parentDir}/conf/dot.files"
+# find . -type l -exec readlink -f {} +
+
+cd "${HOME}" && find . -maxdepth 2 -type l #| grep -v -E '\./(app|dev|dot|iod|tmp|usr)' 

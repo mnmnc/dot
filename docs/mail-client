@@ -1,0 +1,10 @@
+#!/bin/sh
+
+xbps-install gnupg mutt
+
+gpg --gen-key
+
+gpg -r anon@cron.world -e ~/app/sec/mutt/creds-gmx
+gpg -r anon@cron.world -e ~/app/sec/mutt/creds-cron
+
+rm ~/app/sec/mutt/creds-{gmx,cron}

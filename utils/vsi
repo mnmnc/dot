@@ -1,0 +1,18 @@
+#!/bin/sh
+# vsi: void-system-information
+
+ip=$(curl -s "https://api.ipify.org")
+test -z "${ip}" && exit 1
+
+loc=$(curl -s "freegeoip.net/csv/${ip}")
+test -z "${loc}" && exit 1
+
+lng=$(echo "${loc}" | awk -F ',' '{print $9}')
+lat=$(echo "${loc}" | awk -F ',' '{print $10}')
+
+krl=$(uname -r)
+kma=$(uname -m)
+
+printf 'ip: %s\n' "${ip}"
+printf 'loc: %s:%s\n' "${lng}" "${lat}"
+printf 'ker: %s (%s)\n' "${krl}" "${kma}"

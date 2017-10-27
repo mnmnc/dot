@@ -1,0 +1,89 @@
+#!/bin/sh
+# encrypted-container-manager
+
+scriptDir=$(dirname `realpath -P "$0"`)
+parentDir=$(dirname "${scriptDir}")
+
+ecm_create() {
+  test -z "${cntName}" && cntName="${1:-$(date +'%Y%m%d-%H%M%S')}"
+  test -z "${cntDir}" && cntDir="/data/vrt/cnt/enc/${cntName}"
+
+  if test -d "${cntDir}"; then
+    printf '[%s] Container %s already exists!\n' "$(date +'%X')" "${cntName}"
+    exit 1
+  fi
+
+  printf '[%s] Creating container directory %s ...\n' "$(date +'%X')" "${cntDir}"
+  sudo mkdir -p "${cntDir}" || exit 1
+
+  printf '[%s] Setting permissions on %s to %s:%s ...\n' "$(date +'%X')" "${cntName}" "${USER}" "${USER}"
+  sudo chown -R "${USER}:${USER}" "${cntDir}" || exit 1
+
+  printf '[%s] Entering container %s ...\n' "$(date +'%X')" "${cntName}"
+  cd "${cntDir}" || exit 1
+
+  printf '[%s] Creating container %s at %s...\n' "$(date +'%X')" "${cntName}" "${cntDir}"
+  cryfs "secure" "data"
+}
+
+ecm_help() {
+  cat <<EOT
+Usage: $(basename $0) <action> [opts]
+
+ACTIONS
+  [c]reate      Create a new container
+  [u]nmount     Unmount container
+
+ENV-VARS
+  cntName
+EOT
+  exit 1
+}
+
+ecm_mount() {
+  printf '[%s] Mounting container %s at %s...\n' "$(date +'%X')" "${cntName}" "${cntDir}/data"
+  cryfs "secure" "data"
+
+  #if test -f "${cntDir}/cnt.mounts"; then
+  #  while read -r src tgt; do
+  #    printf '[%s] Mounting %s to %s...\n' "$(date +'%X')" "${src}" "${PWD}/data/${tgt}"
+  #    test -d "${PWD}/${tgt}" || mkdir -p "${PWD}/data/${tgt}"
+  #    sudo mount --bind "${src}" "${PWD}/data/${tgt}"
+  #  done < "${cntDir}/cnt.mounts"
+  #fi
+}
+
+ecm_unmount() {
+  printf '[%s] Unmounting %s at %s...\n' "$(date +'%X')" "${cntName}" "${cntDir}/data"
+  fusermount -u "${cntDir}/data"
+}
+
+test $# -eq 0 && ecm_help
+act="${1}"; shift
+
+test -z "${cntName}" && test $(dirname "${PWD}") = '/data/vrt/cnt/enc' && cntName=$(basename "${PWD}")
+
+if test -z "${cntName}" && test $# -gt 0; then
+  cntName="${1}"
+  shift
+fi
+
+test ! -z "${cntName}" && test -z "${cntDir}" && cntDir="/data/vrt/cnt/enc/${cntName}"
+
+if test ! -d "${cntDir}" && test "${act}" != "c"; then
+  printf '[%s] Container %s does not exist!\n' "$(date +'%X')" "${cntName}"
+  exit 1
+fi
+
+case "${act}" in
+  c) ecm_create ${@};;
+  m) ecm_mount ${@};;
+  u) ecm_unmount ${@};;
+esac
+
+# 
+# cnt-name
+#  > cnt.files
+#  > enc
+#  > dec
+#    (auto-mount from cnt.files)

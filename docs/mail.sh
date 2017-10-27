@@ -4,7 +4,7 @@
 # MAIL
 # ------------------------------
 
-xbps-install opensmtpd mailx
+xbps-install opensmtpd mailx spampd
 
 # https://www.opensmtpd.org/faq/example1.html
 # https://www.opensmtpd.org/faq/config.html
@@ -22,30 +22,65 @@ cat >/etc/smtpd/smtpd.conf <<EOF
 pki mail.<domain> key "/var/lib/acme/live/mail.<domain>/privkey"
 pki mail.<domain> certificate "/var/lib/acme/live/mail.<domain>/cert"
 
-table aliases "/etc/aliases"
+table creds "/etc/smtpd/creds"
+table vdoms "/etc/smtpd/vdoms"
+table vusers "/etc/smtpd/vusers"
+
+listen on lo port 10026 tag Filtered
 
 listen on eth0 port 25 hostname mail.<domain> tls pki mail.<domain>
 listen on eth0 port 587 hostname mail.<domain> tls-require pki mail.<domain> auth mask-source
 
-accept from any for domain "<domain>" alias <aliases> deliver to maildir "~/mails"
+accept tagged Filtered for domain <vdoms> virtual <vusers> deliver to maildir "~/mails"
+
+accept from any for domain <vdoms> relay via "smtp://127.0.0.1:10025"
 
 accept from local for any relay
 EOF
 
-cat >/etc/aliases <<EOF
+#cat >/etc/smtpd/creds <<EOF
+#vmail: $(smtpctl encrypt)
+#EOF
+
+cat >/etc/smtpd/vusers <<EOF
+EOF
+
+cat >/etc/smtpd/vdoms <<EOF
+<domain>
+EOF
+
+cat >/etc/smtpd/aliases <<EOF
+abuse: mail
+postmaster: mail
+contact: mail
 mail: vmail
 EOF
 
+# https://wiki.archlinux.org/index.php/OpenSMTPD
+
+# smtpctl encrypt
+
 newaliases
 
-ln -s /etc/sv/opensmtpd/ /var/service
+ln -s /etc/sv/spamd/ /var/service # spamassasin
+ln -s /etc/sv/spampd/ /var/service # sa-wrapper
+ln -s /etc/sv/opensmtpd/ /var/service # smtpd
 
 # dovecot
 xbps-install dovecot
 
 #vim /etc/dovecot/conf.d/10-ssl.conf
 
+#POP 110
+#IMAP 143
+#SMTP (25 / Alternativ 587) - Authentifzierung erforderlich
 
+#SSL POP 995
+#SSL IMAP 993
+#SSL SMTP 465 - Authentifzierung erforderlich
+#TLS POP 110
+#TLS IMAP 143
+#TLS SMTP (25 / Alternativ 587) - Authentifzierung erforderlich
 
 # https://wiki.dovecot.org/Authentication/PasswordSchemes
 
@@ -78,7 +113,3 @@ account required        pam_unix.so
 EOF
 
 ln -s /etc/sv/dovecot /var/service
-
-# spampd
-
-xbps-install spampd

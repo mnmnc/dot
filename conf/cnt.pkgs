@@ -1,7 +1,10 @@
-ncurses
+# base
 coreutils
 findutils
 diffutils
+util-linux
+eudev
+ncurses
 dash
 bash
 grep
@@ -10,7 +13,6 @@ file
 sed
 gawk
 less
-util-linux
 which
 tar
 man-pages
@@ -19,8 +21,20 @@ shadow
 psmisc
 procps-ng
 tzdata
-pciutils
-usbutils
-iana-etc
-sudo
 vim
+
+# system/service
+#iana-etc
+#runit-void
+
+# hardware
+#pciutils
+#usbutils
+
+# network
+#dhcpcd
+#iproute2
+#iputils
+#iw
+#traceroute
+#ethtool
