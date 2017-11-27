@@ -40,12 +40,8 @@ while :; do
           fi
         fi;;
       'CL') # clock
-          now=$(date +%R)
-          #min=$(date +%M | sed 's/^0*//')
-          #test "$((min % 5))" -eq 0 && notify-send -u low " ${now}"
-          clStr=" ${now}"
-          #clStr="%{A:clk:}%{A}"
-          lastMsg=" ${now}"
+          clStr=" ${val} "
+          lastMsg="${clStr}"
           ;;
       'CT') # cpu temperature
           if test "${val}" -ge 75; then
@@ -82,6 +78,10 @@ while :; do
           #;;
       'DP') # display
           notify-send -u low " ${val}"
+          ;;
+      'DT') # date
+          dtStr=" ${val} "
+          lastMsg="${dtStr}"
           ;;
       'FW') # firewall
           if test "${val}" -eq 0; then
@@ -142,6 +142,20 @@ while :; do
             fi
           fi
           ;;
+      'MB') # mouse battery
+        if test "${val}" -le 10; then
+          mbStr="%{F${base09}}%{F-} "
+          if addToCache "${part}"; then
+            #notify-send -u 'critical' " ${val}%"
+            lastMsg=" ${val}%"
+          fi
+        else
+          mbStr=""
+          if delFromCache "${part}"; then
+            #notify-send -u 'normal' " ${val}%"
+            lastMsg=" ${val}%"
+          fi
+        fi;;
       'MC') # microhpone activitiy
           if test "${val}" -eq 1; then
             mcStr="%{F${base09}}%{F-} "
@@ -160,6 +174,13 @@ while :; do
       'MS') # music playback
           notify-send -u 'low' " ${val}"
           lastMsg=" ${val}"
+          ;;
+      'MT') # mounts
+          if test "${val}" -gt 0; then
+            mtStr=" ${val} "
+          else
+            mtStr=""
+          fi
           ;;
       'PK') # package updates
           if test "${val}" -ge 10; then
@@ -356,13 +377,13 @@ while :; do
     #cenStr=" %{F${base04}}${lastMsg}%{F-}"
     #rgtStr="${btStr}${ctStr}${cuStr}${fwStr}${gtStr}${ldStr}${mcStr}${pkStr}${rmStr}${spStr}${siStr}${soStr}${rxStr}${txStr}${wcStr} "
 
-    system="${btStr}${rmStr}${spStr}${cuStr}${wlStr}${ctStr}${gtStr}"
+    system="${btStr}${rmStr}${spStr}${cuStr}${wlStr}${ctStr}${gtStr}${mtStr}"
     safety="${fwStr}${pkStr}${siStr}${soStr}"
     network="${rxStr}${txStr}${wlStr}${icStr}"
-    media="${mcStr}${wcStr}${vlStr}"
+    media="${mbStr}${mcStr}${wcStr}${vlStr}"
 
-    lftStr=" ${wmStr}"
-    cenStr=""
+    lftStr=" ${dtStr}"
+    cenStr="${clStr}"
     rgtStr="${media}${network}${system}${safety}"
 
     printf '%s\n' "%{l}${lftStr}%{c}${cenStr}%{r}${rgtStr}"

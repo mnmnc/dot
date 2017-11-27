@@ -1,0 +1,3 @@
+#!/bin/sh
+
+test "${DRY_RUN}" = 'n' && redshift -c "${HOME}/app/cnf/redshift/redshift.conf" &

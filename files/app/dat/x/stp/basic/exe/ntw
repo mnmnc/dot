@@ -5,13 +5,13 @@ sleep 0.05
 test -p "${NOTIFY_FIFO}" || exit 1
 
 while true; do
-  printf 'BT|%s\n' $(acpi -b | grep 'Battery' | head -n 1 | grep -o '[0-9]*%' | tr -d '%')
+  printf 'BT|%s\n' $(acpi -b | grep 'Battery 1' | grep -o '[0-9]*%' | tr -d '%')
   sleep 60.
 done > "${NOTIFY_FIFO}" &
 
 while true; do
-  printf 'CL|%s\n' $(date +'%H:%M')
-  sleep 60.
+  printf 'CL|%s\n' $(TZ='UTC' date +'%X')
+  sleep 1.
 done > "${NOTIFY_FIFO}" &
 
 while true; do
@@ -30,17 +30,22 @@ while true; do
 done > "${NOTIFY_FIFO}" &
 
 while true; do
+  printf 'DT|%s\n' $(date +'%x')
+  sleep 600.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
   printf 'FW|%s\n' $(pgrep -f ^ufw > /dev/null && printf '1' || printf '0')
   sleep 5.
 done > "${NOTIFY_FIFO}" &
 
 while true; do
-  printf 'GT|%s\n' $(sensors | grep 'temp1' | awk '{print $1$2" "$3}' | tr -d '+' | grep -o -E '[0-9]{2,3}' | tr '\n' ' ')
+  printf 'GT|%s\n' $(sensors | grep 'GPU' | awk '{print $1$2" "$3}' | tr -d '+' | grep -o -E '[0-9]{2,3}' | tr '\n' ' ')
   sleep 15.
 done > "${NOTIFY_FIFO}" &
 
 while true; do
-  printf 'IC|%s\n' $(wget -q --spider "http://google.com" && printf '1' || printf '0')
+  printf 'IC|%s\n' $(wget -q --spider "https://github.com" && printf '1' || printf '0')
   sleep 5
 done > "${NOTIFY_FIFO}" &
 
@@ -65,19 +70,21 @@ while true; do
 done > "${NOTIFY_FIFO}" &
 
 while true; do
+  printf 'MB|%s\n' $(acpi -b | grep 'Battery 0' | grep -o '[0-9]*%' | tr -d '%')
+  sleep 60.
+done > "${NOTIFY_FIFO}" &
+
+while true; do
   last="${cur}"
   mpc idle >/dev/null || sleep 5.
   cur=$(mpc current)
   test "${last}" != "${cur}" && test -n "${cur}" && printf 'MS|%s\n' "${cur}"
 done > "${NOTIFY_FIFO}" &
 
-#while true; do
-#  mnt=$(cat /proc/mounts | grep -o '/dev/sd[a-z][1-9]')
-#  for mntPnt in ${mnt}; do
-#    mntName=$(cat )
-#  done
-#  sleep 5.
-#done > "${NOTIFY_FIFO}" &
+while true; do
+  printf 'MT|%s\n' $(mount | grep '/data/mount/' | wc -l)
+  sleep 5.
+done > "${NOTIFY_FIFO}" &
 
 while true; do
   printf 'PK|%s\n' $(xbps-install -Mun | wc -l)

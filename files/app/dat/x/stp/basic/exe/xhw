@@ -1,0 +1,8 @@
+#!/bin/sh
+
+test -d ~/app/dat/hedgewars && mv ~/app/dat/hedgewars ~/.hedgewars
+#mkdir -p ~/.hedgewars
+#sudo mount --bind ~/app/dat/hedgewars ~/.hedgewars
+hedgewars
+mv ~/.hedgewars ~/app/dat/hedgewars
+#sudo umount ~/.hedgewars

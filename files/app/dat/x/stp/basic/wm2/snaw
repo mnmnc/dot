@@ -32,6 +32,7 @@ main() {
       'c')  wtp "$((PAD_LEFT+rootW/4))" "$((PAD_TOP+rootH/4))"  "$((rootW/2 - (2 * WIN_BORDER)))" "$((rootH/2 - (2 * WIN_BORDER)))" "${winID}";;
       'm')  wtp "$((PAD_LEFT+rootW/4))" "${PAD_TOP}"            "$((rootW/2 - (2 * WIN_BORDER)))" "$((rootH - (2 * WIN_BORDER)))"   "${winID}";;
       'x')  wtp "${PAD_LEFT}"           "${PAD_TOP}"            "$rootW"                          "$rootH"                          "${winID}";;
+      'f')  wtp 0                       0                       "$rootW"                          "$rootH"                          "${winID}";;
     esac
   done
 }

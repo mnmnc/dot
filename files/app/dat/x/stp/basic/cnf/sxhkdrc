@@ -5,29 +5,9 @@
 super + shift + space
   pkill -USR1 sxhkd && notify-send -u low ' reload'
 
-# Lock
-super + shift + k
-  notify-send ' lock'; sleep 3; slock
-
-# Logoff
-super + shift + l
-  notify-send ' logoff'; sleep 3; kill $(pgrep stp)
-
-# Shutdown
-super + shift + n
-  notify-send ' shutdown'; sleep 3; sudo shutdown -P now
-
-# Hibernate
-super + shift + h
-  notify-send ' sleep'; sleep 3; sudo zzz
-
-# Reboot
-super + shift + o
-  notify-send ' reboot'; sleep 3; sudo reboot
-
-# lock screen
-#super + alt + Escape
-#  slock
+# sleep, lock, logoff, shutdown, reboot
+super + shift + {h,k,l,n,o,Escape}
+  powr {h,k,l,n,o,a}
 
 # terminal
 super + Return
@@ -37,13 +17,61 @@ super + Return
 super + space
   dm-ex
 
+# kill window
+super + Escape
+  desw $(pfw)
+
+# focus window left/right/up/down
+super + {a,d,w,s}
+  focw pos {l,r,u,d}
+
+# focus window previous/next/first/last
+super + {q,e}
+  focw his {p,n}
+
+# move window left/right/up/down
+super + {Left,Right,Up,Down}
+  wmv {-20 0,20 0,0 -20,0 20} $(pfw)
+
+# resize window 
+super + ctrl + {Left,Right,Up,Down}
+  wrs {-20 0,20 0,0 -20,0 20} $(pfw)
+
+# snap window
+super + shift + {w,s,a,d,q,e,z,x,c,v,f}
+  snaw {t,b,l,r,tl,tr,bl,br,c,m,x} $(pfw)
+
+# backup/restore window
+super + shift + {b,r}
+  rstw {b,r} $(pfw)
+
+# modify window hide/maximize/default/fullscreen
+#super + shift + {y,x,d,f}
+  #modw {h,a,d,f} $(pfw)
+
+# modify window show last hidden
+#super + ctrl + shift + y
+  #modw s $(phw -l) # print last hidden window
+
+# group window <group> add/delete/toggle/destroy
+super + ctrl + {1-9,0}
+  grpw {1-9,0} tog $(pfw)
+super + {1-9,0}
+  grpw {1-9,0} tog
+super + {1-9,0} + Delete
+  grpw {1-9,0} des
+
+# modify window stacking order lower/higher/bottom/top
+super + alt + {Up,Down}
+  chwso {-r,-l} $(pfw)
+
 # file manager
-super + period
-  dm-fm
+#super + period
+#  dm-fm
 
 # music player
-super + ctrl + period
-  dm-mp
+#super + ctrl + period
+#  dm-mp
 
 # clock notify
 super + alt + c
@@ -88,51 +116,3 @@ XF86MonBrightnessUp
 # lower brightness
 XF86MonBrightnessDown
   xbacklight -dec 10
-
-# kill window
-super + Escape
-  desw $(pfw)
-
-# focus window left/right/up/down
-super + {a,d,w,s}
-  focw pos {l,r,u,d}
-
-# focus window previous/next/first/last
-super + {q,e}
-  focw his {p,n}
-
-# move window left/right/up/down
-super + {Left,Right,Up,Down}
-  wmv {-20 0,20 0,0 -20,0 20} $(pfw)
-
-# resize window 
-super + ctrl + {Left,Right,Up,Down}
-  wrs {-20 0,20 0,0 -20,0 20} $(pfw)
-
-# snap window
-super + shift + {w,s,a,d,q,e,z,x,c,v,f}
-  snaw {t,b,l,r,tl,tr,bl,br,c,m,x} $(pfw)
-
-# backup/restore window
-super + shift + {r,b}
-  rstw {r,b} $(pfw)
-
-# modify window hide/maximize/default/fullscreen
-#super + shift + {y,x,d,f}
-  #modw {h,a,d,f} $(pfw)
-
-# modify window show last hidden
-#super + ctrl + shift + y
-  #modw s $(phw -l) # print last hidden window
-
-# group window <group> add/delete/toggle/destroy
-super + ctrl + {1-9,0}
-  grpw {1-9,0} tog $(pfw)
-super + {1-9,0}
-  grpw {1-9,0} tog
-super + {1-9,0} + Delete
-  grpw {1-9,0} des
-
-# modify window stacking order lower/higher/bottom/top
-super + alt + {Up,Down}
-  chwso {-r,-l} $(pfw)

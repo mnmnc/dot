@@ -6,9 +6,16 @@ test $# -eq 0 && exit 1
 
 if test $# -eq 1 && test "${1}" = 'cln'; then
   for grp in $(cd "${WM_GROUPS}"; find -name "[0-9]" | tr -d './'); do
+    grpFile="${WM_GROUPS}/${grp}"
+    grpStat="${WM_GROUPS}/${grp}.state"
+    grpLast="${WM_GROUPS}/${grp}.last"
     while read winID; do
-      wattr "${winID}" || grpw "${grp}" del "${winID}"
+      #wattr "${winID}" || grpw "${grp}" del "${winID}"
+      if ! wattr "${winID}"; then
+        sed -i "0,/${winID}/d" "${grpFile}"
+      fi
     done < "${WM_GROUPS}/${grp}"
+    test ! -s "${grpFile}" && rm "${grpFile}" "${grpStat}" "${grpLast}"
   done
   exit
 fi
@@ -26,6 +33,7 @@ grpLast="${WM_GROUPS}/${grp}.last"
 if test $# -eq 0; then
   case "${grpAct}" in
     tog)
+      test ! -f "${grpFile}" && exit
       test ! -f "${grpStat}" && status='visible' || status=$(cat "${grpStat}")
       if test "${status}" != "hidden"; then
         test ! -f "${grpLast}" && grep -q "$(pfw)" "${grpFile}" && wattr $(pfw) && printf '%s' "$(pfw)" > "${grpLast}"
@@ -54,22 +62,22 @@ if test $# -eq 0; then
       exit
       ;;
   esac
+else
+  while test $# -gt 0; do
+    winID="$1"; shift
+    winAct="${grpAct}"
+    if test "${winAct}" = 'tog'; then
+      grep -q "${winID}" "${grpFile}" && winAct='del' || winAct='add'
+    fi
+    case "${winAct}" in
+      add)
+        ! test -f "${grpFile}" || ! grep -q "${winID}" "${grpFile}" && printf '%s\n' "${winID}" >> "${grpFile}"
+        test ! -f "${grpStat}" && printf 'visible' > "${grpStat}"
+        ;;
+      del)
+        sed -i "0,/${winID}/d" "${grpFile}"
+        test ! -s "${grpFile}" && rm "${grpFile}" "${grpStat}" "${grpLast}"
+        ;;
+    esac
+  done
 fi
-
-while test $# -gt 0; do
-  winID="$1"; shift
-  winAct="${grpAct}"
-  if test "${winAct}" = 'tog'; then
-    grep -q "${winID}" "${grpFile}" && winAct='del' || winAct='add'
-  fi
-  case "${winAct}" in
-    add)
-      ! test -f "${grpFile}" || ! grep -q "${winID}" "${grpFile}" && printf '%s\n' "${winID}" >> "${grpFile}"
-      test ! -f "${grpStat}" && printf 'visible' > "${grpStat}"
-      ;;
-    del)
-      sed -i "0,/${winID}/d" "${grpFile}"
-      test ! -s "${grpFile}" && rm "${grpFile}" "${grpStat}" "${grpLast}"
-      ;;
-  esac
-done

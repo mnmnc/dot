@@ -1,3 +1,4 @@
 #!/bin/sh
 
-exec "${HOME}/app/cnf/x/lib/stp" x ${@}
+printf '' > ~/.xinit.log
+exec "${HOME}/app/cnf/x/lib/stp" x ${@} >> ~/.xinit.log

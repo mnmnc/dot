@@ -1,7 +1,7 @@
 #!/bin/sh
 
-printf 'Setting cursor-type ...\n' | tee -a ~/.xinit.log
+printf 'Setting cursor-type ...\n'
 test "${DRY_RUN}" = 'n' && xsetroot -cursor_name left_ptr
 
-printf 'Setting dpms ...\n' | tee -a ~/.xinit.log
+printf 'Setting dpms ...\n'
 test "${DRY_RUN}" = 'n' && xset dpms 600 1200 1800

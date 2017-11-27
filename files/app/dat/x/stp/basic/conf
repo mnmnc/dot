@@ -14,6 +14,7 @@ export PAD_TOP="${PAD_TOP:-20}"
 export PAD_BOT="${PAD_BOT:-0}"
 export PAD_LEFT="${PAD_LEFT:-0}"
 export PAD_RIGHT="${PAD_RIGHT:-0}"
+export WIN_GAPS="${WIN_GAPS:-0}"
 export WIN_BORDER="${WIN_BORDER:-1}"
 
 export WIN_ACTIVE="${base06}"
