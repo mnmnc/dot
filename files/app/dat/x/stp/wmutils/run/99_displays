@@ -1,0 +1,3 @@
+#!/bin/sh
+
+test "${DRY_RUN}" = 'n' && (xdp &)

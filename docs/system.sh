@@ -1,6 +1,6 @@
 #!/bin/sh
 
-xbps-install acpi lm_sensors ntfs-3g fuse-exfat lsof
+xbps-install acpi lm_sensors ntfs-3g fuse-exfat lsof testdisk
 
 #./xbps-src build ufraw
 #./xbps-src install ufraw

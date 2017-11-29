@@ -1,0 +1,72 @@
+#!/bin/env bash
+
+scriptDir=$(dirname `realpath -P "$0"`)
+scriptName=$(basename $0)
+
+test "$#" -gt 0 || exit 1
+
+act="${1}"; shift
+thmDir="${HOME}/app/dat/x/thm"
+
+vthm_load() {
+  test "$#" -eq 1 || exit 1
+  thm="${1}"
+
+  test -d "${thmDir}/${thm}" || exit 1
+  printf '[%s] Loading theme %s...\n' "$(date +'%X')" "${thm}"
+
+  test -L "${HOME}/app/cnf/bash/colors" && rm "${HOME}/app/cnf/bash/colors"
+  test -L "${HOME}/app/cnf/x/Xcolors" && rm "${HOME}/app/cnf/x/Xcolors"
+  test -L "${HOME}/app/cnf/vim/colors/base" && rm "${HOME}/app/cnf/vim/colors/base.vim"
+
+  printf '[%s] Setting symbolic links...\n' "$(date +'%X')"
+
+  ln -s "${thmDir}/${thm}/cnf/shell-colors" "${HOME}/app/cnf/bash/colors"
+  ln -s "${thmDir}/${thm}/cnf/x-colors" "${HOME}/app/cnf/x/Xcolors"
+  ln -s "${thmDir}/${thm}/cnf/vim-colors" "${HOME}/app/cnf/vim/colors/base"
+
+  printf '[%s] Setting background...\n' "$(date +'%X')"
+  eval "$(x2v)"
+  xsetroot -solid "${base00}"
+
+  if test -f "${thmDir}/${thm}/wall"; then
+    printf '[%s] Setting wallpaper...\n' "$(date +'%X')"
+    setroot -z "${thmDir}/${thm}/wall"
+  fi
+
+  source "${HOME}/app/cnf/bash/colors"
+  printf '%s' "${thm}" > "${THM_NAME}"
+}
+
+# generate a theme
+# thm g img|col|rnd-img|rnd-col
+
+# load a theme
+# thm l <theme-name>
+
+# preview theme in browser
+# thm p
+
+# compile configs for theme ~/app/skl
+# thm c
+
+# save a loaded theme
+# thm s <theme-name>|hash
+
+# load new theme
+# thm l <theme-name>
+
+# generate endless themes and save them based on hash
+# thm e [<random-type>]
+
+case "${act}" in
+  a) vthm_apply ${@};;
+  c) vthm_compile ${@};;
+#  e) vthm_endless ${@};;
+  g) vthm_generate ${@};;
+  l) vthm_load ${@};;
+#  o) vthm_overview ${@};;
+#  p) vthm_preview ${@};;
+  r) vthm_reload ${@};;
+  s) vthm_save ${@};;
+esac

@@ -1,0 +1,39 @@
+#!/usr/bin/env sh
+
+xpmFile="${WM_TMP}/power.state"
+
+test "$#" -eq 1 || exit 1
+
+ # already one action in progress
+test "${1}" != 'a' && test -f "${xpmFile}" && exit 1
+
+case "${1}" in
+  a)
+    test -f "${xpmFile}" || exit 1
+    notify-send ' abort'
+    rm "${xpmFile}"
+    exit 0
+    ;;
+  h) notify-send ' sleep';;
+  k) notify-send ' lock';;
+  l) notify-send ' logoff';;
+  n) notify-send ' shutdown';;
+  o) notify-send ' reboot';;
+  *) exit 1;; # unknown command
+esac
+
+printf '%s' "${1}" > "${xpmFile}"
+
+sleep 3.
+
+test -f "${xpmFile}" || exit 0 # user aborted
+
+case "${1}" in
+  h) sudo zzz;;
+  k) slock;;
+  l) kill $(pgrep stp);;
+  n) sudo shutdown -P now;;
+  o) sudo reboot;;
+esac
+
+rm "${xpmFile}"

@@ -1,0 +1,49 @@
+#!/bin/sh
+
+tgt=$(printf '%b' 'local\nremote' | xdm "$@")
+fnd='find -H %s -mindepth 1 -maxdepth 1 %s'
+
+if test "${tgt}" = 'remote'; then
+  sshWrap="ssh %s -p 2120 anon@cron.world '%s'"
+  curDirCmd=$(printf "${sshWrap}" '' 'pwd')
+  curDir=$(${curDirCmd})
+elif test "${tgt}" = 'local'; then
+  sshWrap="%s %s"
+  curDir=$(pwd)
+else
+  exit 1
+fi
+
+while :; do
+  cmdFindDirs=$(printf "${fnd}" "${curDir}" "-xtype d")
+  cmdFindFiles=$(printf "${fnd}" "${curDir}" "-xtype f")
+  cmdDirs=$(printf "${sshWrap}" "" "${cmdFindDirs}")
+  cmdFiles=$(printf "${sshWrap}" "" "${cmdFindFiles}")
+
+  dirList=$(eval "${cmdDirs}" | sort -h | awk -F '/' '{print $NF}')
+  fileList=$(eval "${cmdFiles}" | sort -h | awk -F '/' '{print $NF}')
+
+  fullList=$(printf '%s\n%s\n%s' ".." "${dirList}" "${fileList}" | sed '/^\s*$/d')
+
+  sel=$(printf '%b\n' "${fullList}" | sed "s|^\./||" | xdm)
+
+  if test "${sel}" = ''; then
+    break
+  elif test "${sel}" = '..'; then
+    newDirCmd=$(printf "${sshWrap}" "" "dirname \"${curDir}\"")
+    curDir=$(eval ${newDirCmd})
+  elif printf '%s\n' "${dirList}" | grep -q "${sel}"; then
+    curDir="${curDir}/${sel}"
+  elif printf '%s\n' "${fileList}" | grep -q "${sel}"; then
+    #test "${tgt}" = 'local' && more "${curDir}/${sel}"
+    continue
+  fi
+
+  case "${sel}" in
+    '#')
+      test "${tgt}" = 'local' && sshFlag="" || sshFlag="-t"
+      cmd=$(printf "${sshWrap}" "${sshFlag}" "TERM=${TERM} cd \"${curDir}\"; ${SHELL}")
+      xst -e "${SHELL}" -c "${cmd}"
+      break;;
+  esac
+done

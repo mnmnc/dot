@@ -12,5 +12,7 @@ alias grep='grep --color=auto'
 alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
 
+alias git='hub'
+
 # fix ssh term
 #alias ssh='TERM="xterm-256color" ssh'

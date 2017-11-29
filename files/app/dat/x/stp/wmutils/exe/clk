@@ -1,0 +1,3 @@
+#!/bin/sh
+
+printf ' %s\n' "$(date +%R)"

@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# ii-editor
+
+while :; do
+  clear
+  printf ' \033[0;33mSay\033[0m: '
+  read line
+  printf '%s\n' "${line}" | i2w "${@}" || exit 1
+done

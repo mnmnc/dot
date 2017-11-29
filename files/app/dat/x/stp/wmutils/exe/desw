@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+
+test "$#" -eq 1 || exit 1
+
+pid=$(xdo pid "${1}")
+winClass=$(xprop -id "${1}" | awk '/WM_CLASS/{print $4}' | tr -d '"')
+
+# check if process exists
+kill -0 "${pid}" || exit
+
+killw "${1}"
+
+#notify-send -u low " ${pid}"
+
+case "${winClass}" in
+  'Hedgewars') kill -8 "${pid}";;
+esac

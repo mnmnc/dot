@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+
+#eval "$(x2v)"
+
+export NOTIFY_DIR="/tmp/notify"
+export NOTIFY_FIFO="${NOTIFY_DIR}/fifo"
+export NOTIFY_CACHE="${NOTIFY_DIR}/cache"
+
+export WM_TMP="/tmp/wm"
+export WM_GROUPS="${WM_TMP}/groups"
+export WM_RESTORE="${WM_TMP}/restore"
+
+export PAD_TOP="${PAD_TOP:-20}"
+export PAD_BOT="${PAD_BOT:-0}"
+export PAD_LEFT="${PAD_LEFT:-0}"
+export PAD_RIGHT="${PAD_RIGHT:-0}"
+export WIN_GAPS="${WIN_GAPS:-25}"
+export WIN_BORDER="${WIN_BORDER:-1}"
+
+#export WIN_ACTIVE="${base06}"
+#export WIN_INACTIVE="${base01}"
+
+#export ACTIVE_BORDER="${ACTIVE_BORDER:-base0F}"
+#export NORMAL_BORDER="${NORMAL_BORDER:-base01}"

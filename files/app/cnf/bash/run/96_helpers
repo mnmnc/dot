@@ -1,265 +1,61 @@
 #!/bin/sh
 
-# Dotenv file reader
-de() {
-  ld="${HOME}/app/log/env"
-  oe="${ld}/old.sh"
-  ne="${ld}/new.sh"
-
-  #mv "${ne}" "${oe}"
-  #env > "${ne}"
+git-squish() {
+  test "${1}" -le 1 && return 1
+  git rebase --interactive "HEAD~${1}"
 }
 
-# Easy directory switcher
-# 
-# No input: Returns latest directory
-# STDIN: Read folders to cache
-# a: Return all cached folders
-# Anything else: Try to switch directory
-j() {
+rnd-pass() {
+  </dev/urandom tr -dc 'A-Za-z0-9!"#$%&()*+,-./:;<=>?@[\]^_{|}~' | head -c "${1:-10}"
+}
+
+viw() {
+  vim $(which "${1}")
+}
+
+cdw() {
+  cd $(dirname $(which "${1}"))
+}
+
+jump() {
   ld="${HOME}/app/log/bash"
   lg="${ld}/dirs.log"
   lf="${ld}/dirs.lst"
-  
+  # el="${ld}/env.lst"
+
   test ! -d "${ld}" && mkdir -p "${ld}"
   test ! -e "${lg}" && touch "${lg}"
   test ! -e "${lf}" && touch "${lf}"
 
   test -p /dev/stdin && cat >> "${lg}"
   test -z "${1}" && head -n 1 "${lf}" && return
-  test "${1}" = 'l' && cat "${lg}" && return
-  test "${1}" = 'e' && e=1 && shift || e=0
+
+  #test "${1}" = 'l' && cat "${lg}" && return
+  #test "${1}" = 'e' && e=1 && shift || e=0
 
   t=$(readlink -f "${1}")
-  test -e "${t}" && d="${t}" || d=$(
-    grep -F -i "${1}" "${lg}" | sort -u | awk '{pth=$1; print gsub(/\//,"",$1)";"pth}' | \
-    sort -n | head -n 1 | cut -d ';' -f 2
-  )
-  
+  if test -e "${t}"; then
+    d="${t}"
+  else
+    d=$(grep -F -i "${1}" "${lg}" | sort -u | \
+    awk '{pth=$1; print gsub(/\//,"",$1)";"pth}' | \
+    sort -n | head -n 1 | cut -d ';' -f 2)
+  fi
+
   test -d "${d}" || return 1
-  
-  test "${e}" -eq 1 && printf '%s\n' "${d}" && return
-
-  builtin cd "${d}" || return 1
-
-  #test -f ".env" && de
+  cd "${d}" || return 1
 
   grep -F -q "${d}" "${lg}" || printf '%s\n' "${d}" >> "${lg}"
   printf '%s' "${d}" > "${lf}"
-}
 
-# Easy way to change directory
-# and list contents
-jl() {
-  j "$@" && l
-}
-
-# Easy file/directory lister
-l() {
-  shopt -s nullglob
-  # \[\e[0;33m\]${bn}\[\e[0m\]
-  (
-    cd "${1:-$PWD}"
-    echo -e "$(find * -maxdepth 0 -exec stat -c '\e[0;33m%n\e[0m %U:%G \e[0;32m%a\e[0m' {} \; | column -t | sed -e 's/^/  /')"
-  )
-  shopt -u nullglob
-}
-
-la() {
-  shopt -s dotglob
-  l "${@}"
-  shopt -u dotglob
-}
-
-# Easy file trasher
-# 
-# Usage: t [a] <file1> [<file2>] (or use stdin) to add to trash
-#        t r <pattern>] to restore
-#        t l [<pattern>] to list all trashed files (with pattern)
-#        t c [<days>] to clean the trash (default 30 days old)
-t() {
-  td="/data/trash/${USER}"
-
-  if printf 'cklrt' | grep -F -q "${1}"; then
-    a="${1}"
-    shift
-  else
-    a='a'
-  fi
-
-  test ! -d "${td}" && mkdir -p "${td}"
-  test -p /dev/stdin && files=$(cat) || files="${@}"
-
-  case "${a}" in
-    a)  for f in ${files}; do
-          test ! -e "${f}" && continue
-          rp=$(readlink -f "${f}")
-          mt=$(stat -c '%Y' "${rp}")
-          test -f "${f}" && ms=$(md5sum "${rp}" | awk '{print $1}')
-          test -d "${f}" && ms=$(tar -cf - "${rp}" 2>&1 >/dev/null | md5sum | awk '{print $1}')
-          bn=$(basename "${rp}")
-          tn="${bn}@${ms}.dat"
-          nf="${bn}@${ms}.inf"
-          if mv "${rp}" "${td}/${tn}"; then
-            printf "%s\n%s\n" "${rp}" "${mt}" > "${td}/${nf}"
-            touch "${td}/${tn}" "${td}/${nf}"
-            printf 'Trashed: %s\n' "${td}/${bn}@${ms}.{dat,inf}"
-          fi
-        done
-        return
-        ;;
-    c)  find "${td}" -mtime +"${1:-30}" -exec rm -r {} \;
-        ;;
-    l)  test ! -z "${1}" && p="${1}" || p='*'
-        find "${td}" -mindepth 1 | grep -E "${p}"
-        return
-        ;;
-    r)  files=$(find "${td}" -name "*${1}*" -and -name "*.dat")
-        for f in ${files}; do
-          nf=$(printf '%s' "${f}" | sed 's|.dat$|.inf|g')
-          rp=$(sed -n '1p' "${nf}")
-          mt=$(sed -n '2p' "${nf}")
-          if mv "${f}" "${rp}"; then
-            touch -d "@${mt}" "${rp}"
-            printf 'Restored: %s\n' "${rp}"
-            rm "${nf}"
-          fi
-        done
-        return
-        ;;
-  esac
-}
-
-# Xresources dmenu: A dmenu that reads .Xresources
-#xdm() {
-#  dmenu $(xrdb -q | grep font | sed "s|.*xft:||g; s|,style=.*||g") "${@}"
-#}
-
-# Examples:
-#  ix hello.txt              # paste file (name/ext will be set).
-#  echo Hello world. | ix    # read from STDIN (won't set name/ext).
-#  ix -n 1 self_destruct.txt # paste will be deleted after one read.
-#  ix -i ID hello.txt        # replace ID, if you have permission.
-#  ix -d ID
-
-ix() {
-  OPTIND=0
-
-  url="ix.io"
-  test -e "${XI_CRED}" && source "${XI_CRED}"
-  test ! -z "${XI_USER}" && url="${XI_USER}:${XI_PASS}@${url}"
-
-  #test -f "$HOME/.netrc"  && opts='-n'
-
-  while getopts ":hd:i:n:u:" x; do
-    case $x in
-      h) echo "ix [-d ID] [-i ID] [-n N] [opts]"; return;;
-      d) curl $opts -X DELETE "${url}/$OPTARG"; return;;
-      u) curl $opts -X GET "${url}/user/$OPTARG"; return;;
-      i) opts="$opts -X PUT"; id="$OPTARG";;
-      n) opts="$opts -F read:1=$OPTARG";;
-    esac
-  done
-
-  shift $((OPTIND - 1))
-
-  if test -t 0; then
-    fn="$1"
-    test ! -z "${1}" && shift
-    if test ! -z "$fn"; then
-        curl $opts -F f:1=@"$fn" $* "${url}/$id"
-        return
-    fi
-    printf '^C to cancel, ^D to send.\n'
-  fi
-
-  curl $opts -F f:1='<-' $* "${url}/$id"
-}
-
-# u = upload
-# d = download
-
-# -a: Disable tar.gz archive
-# -c: Generate checksums for files (skipped on stdin)
-# -e: Encrypt files using gpg
-# -f: Use a specific filename (for stdin)
-# -i: Use a specific ID
-# -p: Set password [WIP]
-# -s: Source ([a]uto, a[r]gs, [c]lipboard, [d]esktop, se[l]ection, [s]tdin, [w]indow)
-#     default: auto (args, stdin, desktop)
-# -v: Show progressbar on upload
-
-tf() {
-  OPTIND=0
-
-  archive=1
-  checksum=0
-  encrypt=0
-  usenewid=0
-  filename=''
-  #password=''
-  progress=0
-
-  opts=""
-  files=""
-
-  while getopts "acef:i:p:v" x; do
-    case $x in
-      a) archive=0;;
-      c) checksum=1;;
-      e) encrypt=1;;
-      f) filename="${OPTARG}";;
-      i) usenewid="${OPTARG}";;
-      #p) password="${OPTARG}";;
-      v) progress=1; opts+=" --progress-bar";;
-    esac
-  done
-
-  shift $((OPTIND - 1))
-  OPTIND=0
-
-  test ! -z "${1}" && act="${1}"; shift || return 1
-  #echo "ACT: ${act}"
-
-  if test "${act}" = 'd'; then
-    printf '[%s] Downloading ...\n' "$(date +'%X')"
-    return
-  fi
-
-  if test -t 0; then
-    # no stdin
-    printf '[%s] Reading args ...\n' "$(date +'%X')"
-    while test $# -gt 0; do
-      fn="${1}"; shift
-      #echo "ARG: ${fn}"
-      test -f "${fn}" && files+=" ${fn}"
-    done
-  else
-    # stin
-    test -z "${filename}" && fn=$(mktemp '/tmp/tf-XXX') || fn="${filename}"
-    printf '[%s] Reading stdin ...\n' "$(date +'%X')"
-    while read stdin; do
-      #echo "STDIN: ${stdin}"
-      printf '%s\n' "${stdin}" >> "${fn}"
-    done
-    files+=" ${fn}"
-  fi
-
-  test -z "${files}" && return 1
-
-  #echo "FILES: ${files}"
-
-  if test "${archive}" -eq 1; then
-    printf '[%s] Generating archive ...\n' "$(date +'%X')"
-    archiveFile=$(mktemp '/tmp/tf-archive-XXX.tgz')
-    tar cfz "${archiveFile}" ${files}
-    files="${archiveFile}"
-  fi
-
-  printf '[%s] Uploading ...\n' "$(date +'%X')"
-  for fn in ${files}; do
-    printf '[%s] Processing "%s" ...\n' "$(date +'%X')" "${fn}"
-    test "${encrypt}" -eq 1 && gpg # todo
-    curl ${opts} --upload-file "${fn}" "https://transfer.sh/${usenewid}"
-  done
+  # if test -x "${d}/.env"; then
+  #   if test -e "${el}"; then
+  #     for i in $(env | sed 's/=.*//'); do
+  #       unset $i
+  #     done
+  #     source "${el}"
+  #   fi
+  #   env > "${el}"
+  #   source "${d}/.env"
+  # fi
 }

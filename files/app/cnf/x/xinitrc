@@ -1,4 +1,19 @@
-#!/bin/sh
+#!/usr/bin/env sh
+
+export DSK_TMP="/tmp/dsk"
+export STP_NAME="${DSK_TMP}/stp"
+export THM_NAME="${DSK_TMP}/thm"
+
+SETUP_NAME='wmutils'
+THEME_NAME='cookies'
+
+mkdir -p "${DSK_TMP}"
+
+# setup variables
+printf '%s' "${SETUP_NAME}" > "${STP_NAME}"
+printf '%s' "${THEME_NAME}" > "${THM_NAME}"
+
+ln -s "${HOME}/app/dat/x/stp/${SETUP_NAME}" "${HOME}/app/dat/x/stp/current"
 
 printf '' > ~/.xinit.log
-exec "${HOME}/app/cnf/x/lib/stp" x ${@} >> ~/.xinit.log
+exec "${HOME}/dot/utils/vstp" x ${@} >> ~/.xinit.log

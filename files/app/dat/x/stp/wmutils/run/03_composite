@@ -1,0 +1,3 @@
+#!/bin/sh
+
+test "${DRY_RUN}" = 'n' && compton -b --config "${HOME}/app/cnf/compton/compton.conf"

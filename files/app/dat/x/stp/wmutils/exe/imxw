@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+
+# ifsw: is maximized window
+
+winID="${1:-$(pfw)}"
+
+rootWin=$(lsw -r)
+rootW=$(wattr w "${rootWin}")
+rootH=$(wattr h "${rootWin}")
+
+rootW=$((rootW - PAD_LEFT - PAD_RIGHT))
+rootH=$((rootH - PAD_TOP - PAD_BOT))
+
+test "$(wattr wh "${winID}")" = "${rootW} ${rootH}"

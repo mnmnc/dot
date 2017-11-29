@@ -1,0 +1,18 @@
+#!/bin/sh
+
+eval "$(x2v)"
+
+# refresh bspwm
+#~/app/cnf/bspwm/bspwmrc
+
+# refresh bar
+pgrep ntw >/dev/null && kill -8 $(pgrep ntw)
+pgrep ntb >/dev/null && kill -8 $(pgrep ntb)
+pgrep ntr >/dev/null && kill -8 $(pgrep ntr)
+pgrep lemonbar >/dev/null && kill -8 $(pgrep lemonbar)
+
+ntb &
+ntw &
+
+thm=$(cat "${THM_NAME}")
+setroot -z "${HOME}/app/dat/x/thm/${thm}/wall"

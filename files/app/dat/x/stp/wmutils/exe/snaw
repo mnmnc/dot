@@ -1,0 +1,40 @@
+#!/usr/bin/env sh
+
+# snaw: snap window
+
+test -d "${WM_RESTORE}" || mkdir -p "${WM_RESTORE}"
+
+main() {
+  winPos=${1}
+  shift || exit
+  winIDs="${@}"
+
+  rootWin=$(lsw -r)
+  rootW=$(wattr w "${rootWin}")
+  rootH=$(wattr h "${rootWin}")
+
+  rootW=$((rootW - PAD_LEFT - PAD_RIGHT))
+  rootH=$((rootH - PAD_TOP - PAD_BOT))
+
+  for winID in $(echo "${winIDs}"); do
+    # rstw b "${winID}"
+    (test "${winPos}" = "f" || test "${winPos}" = "x") && chwb -s 0 "${winID}" || chwb -s "${WIN_BORDER}" "${winID}"
+    case "${winPos}" in
+      #         DISTANCE_LEFT                       DISTANCE_TOP                        WINDOW_WIDTH                                        WINDOW_HEIGHT                                       WINDOW_ID
+      't')  wtp "$((PAD_LEFT+WIN_GAPS))"            "$((PAD_TOP+WIN_GAPS))"             "$((rootW - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"    "$((rootH/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "${winID}";;
+      'b')  wtp "$((PAD_LEFT+WIN_GAPS))"            "$((PAD_TOP+WIN_GAPS+rootH/2))"     "$((rootW - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"    "$((rootH/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "${winID}";;
+      'l')  wtp "$((PAD_LEFT+WIN_GAPS))"            "$((PAD_TOP+WIN_GAPS))"             "$((rootW/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "$((rootH - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"    "${winID}";;
+      'r')  wtp "$((PAD_LEFT+WIN_GAPS+rootW/2))"    "$((PAD_TOP+WIN_GAPS))"             "$((rootW/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "$((rootH - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"    "${winID}";;
+      'tl') wtp "$((PAD_LEFT+WIN_GAPS))"            "$((PAD_TOP+WIN_GAPS))"             "$((rootW/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "$((rootH/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "${winID}";;
+      'tr') wtp "$((PAD_LEFT+WIN_GAPS+rootW/2))"    "$((PAD_TOP+WIN_GAPS))"             "$((rootW/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "$((rootH/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "${winID}";;
+      'bl') wtp "$((PAD_LEFT+WIN_GAPS))"            "$((PAD_TOP+WIN_GAPS+rootH/2))"     "$((rootW/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "$((rootH/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "${winID}";;
+      'br') wtp "$((PAD_LEFT+WIN_GAPS+rootW/2))"    "$((PAD_TOP+WIN_GAPS+rootH/2))"     "$((rootW/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "$((rootH/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "${winID}";;
+      'c')  wtp "$((PAD_LEFT+WIN_GAPS+rootW/4))"    "$((PAD_TOP+WIN_GAPS+rootH/4))"     "$((rootW/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "$((rootH/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "${winID}";;
+      'm')  wtp "$((PAD_LEFT+WIN_GAPS+rootW/4))"    "$((PAD_TOP+WIN_GAPS))"             "$((rootW/2 - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"  "$((rootH - (2 * WIN_BORDER) - (2 * WIN_GAPS)))"    "${winID}";;
+      'x')  wtp "$((PAD_LEFT))"                     "$((PAD_TOP))"                      "$rootW"                                            "$rootH"                                            "${winID}";;
+      'f')  wtp 0                                   0                                   "$((rootW + PAD_LEFT + PAD_RIGHT))"                 "$((rootH + PAD_TOP + PAD_BOT))"                    "${winID}";;
+    esac
+  done
+}
+
+main ${@}

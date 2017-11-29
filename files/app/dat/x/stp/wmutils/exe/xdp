@@ -1,0 +1,39 @@
+#!/bin/sh
+
+xrout=$(xrandr)
+hdmi=$(echo "${xrout}" | grep -i 'HDMI' | awk '{print $1}')
+vga=$(echo "${xrout}" | grep -i 'VGA' | awk '{print $1}')
+edp=$(echo "${xrout}" | grep -i 'EDP' | awk '{print $1}')
+
+while :; do
+  lst="${dsk}"
+  dsk=""
+
+  atv=$(echo "${xrout}" | grep " connected" | awk '{print $1}' | tr '\n' ' ')
+  test -n "${edp}" && echo "${atv}" | grep -q "${edp}" && dsk="${edp}"
+  test -n "${vga}" && echo "${atv}" | grep -q "${vga}" && dsk="${vga}"
+  test -n "${hdmi}" && echo "${atv}" | grep -q "${hdmi}" && dsk="${hdmi}"
+
+  if test "${dsk}" != "${lst}"; then
+    dskCfg=$(echo "${xrout}" | grep "${dsk}" -A 1 | tail -n 1 | awk -F ' ' '{print $1}')
+
+    cmd='xrandr'
+    for curDsk in ${atv}; do
+      if test "${curDsk}" != "${dsk}"; then
+        cmd="${cmd} --output ${curDsk} --off"
+      else
+        cmd="${cmd} --output ${curDsk} --primary --preferred --mode ${dskCfg}"
+      fi
+    done
+
+    ${cmd}
+    xrf
+    printf 'DP|%s\n' "${dsk}" > "${NOTIFY_FIFO}"
+
+    sleep 4
+  else
+    sleep 1
+  fi
+  
+  xrout=$(xrandr)
+done

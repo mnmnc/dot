@@ -12,10 +12,11 @@ yes | ufw reset
 ufw allow out 53/udp
 
 # HTTP, HTTPS
-ufw allow out 80,443,587,993/tcp
+ufw allow out 80,443/tcp
 
 # SMTP & IMAP
-ufw allow 143,587/tcp
+ufw allow 25,143,587,993/tcp
+ufw allow out 143,587,993/tcp
 
 # IRC
 #ufw allow out 194/tcp
@@ -28,10 +29,8 @@ ufw allow out 6667,1863,5222,5223,8010/tcp
 ufw allow out 6891:6900,6901/tcp
 
 # SSH
+ufw allow 2120/tcp
 ufw allow out 2120/tcp
-
-# Allow SMTP
-ufw allow out 25/tcp
 
 # Nginx (Http & https)
 ufw allow 80,443/tcp

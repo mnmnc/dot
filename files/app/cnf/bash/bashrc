@@ -7,14 +7,10 @@ source "${HOME}/app/sec/api-keys"
 #  only read secure data into environment
 [[ "$-" != *i* ]] && return
 
-# setup variables
-SETUP_NAME='basic'
-THEME_NAME='hotel'
-
 # override path by user and setup executeables
-PATH="${PATH}:${HOME}/dot/utils:${HOME}/app/cnf/x/lib:${HOME}/app/dat/x/stp/${SETUP_NAME}/exe:${HOME}/app/dat/x/stp/${SETUP_NAME}/wm2"
+PATH="${PATH}:${HOME}/app/exe:${HOME}/dot/utils:${HOME}/app/dat/x/stp/current/exe"
 
-export SETUP_NAME THEME_NAME PATH
+source "${HOME}/app/dat/x/stp/current/conf"
 
 printf '' > "${HOME}/.bash_login"
 

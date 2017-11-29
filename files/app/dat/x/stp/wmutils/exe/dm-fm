@@ -1,0 +1,63 @@
+#!/bin/sh
+
+scriptDir=$(dirname `realpath -P "$0"`)
+scriptName=$(basename $0)
+
+pth="${HOME}"
+shl=$(getent passwd $LOGNAME | cut -d: -f7)
+opn=0
+hid=0
+out=0
+
+while test "${out}" -ne 1; do
+  #[[ "${curPath}" != *"/" ]] && curPath="${curPath}/"
+
+  # Append slash after path for correct behavior of find to not find this directory but everything inside
+  dl=$(cd "${pth}" && find * -maxdepth 0 -xtype d 2>/dev/null | sort)
+  fl=$(cd "${pth}" && find * -maxdepth 0 -xtype f 2>/dev/null | sort)
+
+  if test "${hid}" -eq 0; then
+    dl=$(printf '%s' "${dl}" | grep -v '\/\.')
+    fl=$(printf '%s' "${fl}" | grep -v '\/\.')
+  fi
+
+  full="..\n${dl}\n${fl}"
+
+  # Display list, replace current path with nothing (make it short), skip empty lines and pass it to dmenu
+  np=$(printf '%b' "${full}" | sed "s|${pth}/||" | grep -v -e '^$' | "${scriptDir}/xdm" "$@")
+  test -z "${np}"
+
+  test -L "${pth}/${np}" && fp=$(readlink -f "${pth}/${np}") || fp="${pth}/${np}"
+
+  if test "${np}" = '$'; then
+    xst -e "${shl}" -c "cd \"${pth}\"; ${shl}" 2>/dev/stdout >/dev/null | tee -a ~/app/log/dmenu/dm-fm.log &
+    out=1
+  elif test "${np}" = '~'; then
+    pth="${HOME}"
+  elif test "${np}" = '/'; then
+    pth="/"
+  elif test "${np}" = '?'; then
+    pth=$($shl -c 'source app/cnf/bash/run/96_helpers && j')
+  elif test "${np}" = '..'; then
+    pth=$(dirname "${pth}")
+  elif test -f "${fp}"; then
+    act=''
+    test -r "${pth}/${np}" && act="${act}view\n"
+    #test -w "${pth}/${np}" && act="${act}edit\n"
+    test -x "${pth}/${np}" && act="${act}run\nterm\n"
+    fa=$(printf '%b' "${act}" | "${scriptDir}/xdm" "$@")
+    case "${fa}" in
+      v*) xst -e "${shl}" -c "${EDITOR} \"${pth}/${np}\"" 2>/dev/stdout >/dev/null | tee -a ~/app/log/dmenu/dm-fm.log &;;
+      e*) xst -e "${shl}" -c "${EDITOR} \"${pth}/${np}\"" 2>/dev/stdout >/dev/null | tee -a ~/app/log/dmenu/dm-fm.log &;;
+      r*) xst -e "${shl}" -c "${pth}/${np}" 2>/dev/stdout >/dev/null | tee -a ~/app/log/dmenu/dm-fm.log &;;
+      t*) xst -e "${shl}" -c "${pth}/${np}" 2>/dev/stdout >/dev/null | tee -a ~/app/log/dmenu/dm-fm.log &;;
+    esac
+    out=1
+  elif test -d "${fp}"; then
+    pth="${fp}"
+  elif test "$(echo ${fp} | cut -c 1)" = '/'; then
+    pth="${np}"
+  fi
+
+  test -z "${np}" && out=1
+done

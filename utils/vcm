@@ -20,8 +20,15 @@ vcm_attach() {
   fi
 }
 
+vcm_backup() {
+  bakFile="/data/vrt/cnt/pub/${cntName}-TS-$(date +'%s').tar.gz"
+  printf '[%s] Backing up %s as %s...\n' "$(date +'%X')" "${cntName}" "${bakFile}"
+  tar --xattrs -czpvf "${bakFile}" "${cntDir}"
+}
+
 vcm_create() {
   test -z "${cntName}" && cntName="${1:-$(date +'%Y%m%d-%H%M%S')}"
+  test -z "${cntDir}" && cntDir="/data/vrt/cnt/pub/${cntName}"
 
   if test -d "${cntDir}"; then
     printf '[%s] Container %s already exists!\n' "$(date +'%X')" "${cntName}"
@@ -29,10 +36,10 @@ vcm_create() {
   fi
 
   printf '[%s] Creating container directory %s ...\n' "$(date +'%X')" "${cntDir}"
-  sudo mkdir -p "${cntDir}" || exit 1
+  mkdir -p "${cntDir}" || exit 1
 
-  printf '[%s] Setting permissions on %s to %s:%s ...\n' "$(date +'%X')" "${cntName}" "${USER}" "${USER}"
-  sudo chown -R "${USER}:${USER}" "${cntDir}" || exit 1
+  #printf '[%s] Setting permissions on %s to %s:%s ...\n' "$(date +'%X')" "${cntName}" "${USER}" "${USER}"
+  #chown -R "${USER}:${USER}" "${cntDir}" || exit 1
 
   printf '[%s] Entering container %s ...\n' "$(date +'%X')" "${cntName}"
   cd "${cntDir}" || exit 1
@@ -50,7 +57,17 @@ vcm_create() {
     xbps-reconfigure -r "${cntDir}" -f base-files > "${cntDir}/vcm.log" || exit 1
 
     printf '[%s] Installing remaining packages from %s ...\n' "$(date +'%X')" "${cntPkgs}"
-    xbps-install -r "${cntDir}" -y $(cat "${cntPkgs}" | tr '\n' ' ') > "${cntDir}/vcm.log" || exit 1
+    pkgs=$(cat "${cntPkgs}" | sed -e '/\s*#.*$/d' -e '/^\s*$/d' | tr '\n' ' ')
+    xbps-install -r "${cntDir}" -y ${pkgs} > "${cntDir}/vcm.log" || exit 1
+
+    printf '[%s] Copying container files ...\n' "$(date +'%X')"
+    while IFS='' read -r line || test -n "${line}"; do
+      cp ${line}
+    done < "${cntFiles}"
+
+    #printf '[%s] Setting permissions on %s to %s:%s ...\n' "$(date +'%X')" "/root" "1337" "1337"
+    #mkdir "${cntDir}/root"
+    #chmod 1337:1337 -r "${cntDir}/root"
 
     test -f "${cntDir}/vcm.log" && rm "${cntDir}/vcm.log"
     #for pkgName in $(cat "${cntPkgs}"); do
@@ -75,7 +92,7 @@ vcm_destroy() {
   read -p ': ' answ
 
   case "${answ}" in
-    y|Y|yes|YES) sudo rm -rf "${cntDir}"; printf '[%s] Container %s has been destroyed ...\n' "$(date +'%X')" "${cntName}";;
+    y|Y|yes|YES) rm -rf "${cntDir}"; printf '[%s] Container %s has been destroyed ...\n' "$(date +'%X')" "${cntName}";;
   esac
 }
 
@@ -110,12 +127,27 @@ vcm_inject() {
 }
 
 vcm_install() {
-  xbps-install -r "${cntDir}" ${@}
+  printf '[%s] Running install ...\n' "$(date +'%X')"
+  xbps-install -r "${cntDir}" ${@} #| sed -e 's/^/[cnt] /'
 }
 
 vcm_list() {
   printf '[%s] Listing containers ...\n' "$(date +'%X')"
-  find '/data/vrt/cnt' -mindepth 1 -maxdepth 1 -type d | sed 's|/data/vrt/cnt/||g'
+  find '/data/vrt/cnt/pub' -mindepth 1 -maxdepth 1 -type d | sed 's|/data/vrt/cnt/pub/||g'
+}
+
+vcm_pkg() {
+  printf '[%s] Running pkgdb ...\n' "$(date +'%X')"
+  xbps-pkgdb -r "${cntDir}" ${@} #| sed -e 's/^/[cnt] /'
+}
+
+vcm_query() {
+  printf '[%s] Querying pkgs ...\n' "$(date +'%X')"
+  xbps-query -r "${cntDir}" ${@} #| sed -e 's/^/[cnt] /'
+}
+
+vcm_update() {
+  xbps-install -r "${cntDir}" -Su ${@} #| sed -e 's/^/[cnt] /'
 }
 
 vcm_run() {
@@ -132,6 +164,7 @@ vcm_run() {
 
   printf '[%s] Running container as screen session %s ...\n' "$(date +'%X')" "cnt-${cntName}"
   (cd "${cntDir}" && screen -d -m -S "cnt-${cntName}" /bin/sh -c 'contain . /bin/sh' && sleep 0.1)
+  #(cd "${cntDir}" && screen -d -m -S "cnt-${cntName}" /bin/sh -c 'contain . /bin/runit' && sleep 0.1)
 
   cntPID=$(screen -ls "cnt-${cntName}" | grep 'tached' | awk -F '.' '{print $1}' | grep -o '[0-9]*')
   if test -z "${cntPID}"; then
@@ -143,26 +176,79 @@ vcm_run() {
   printf '%s' "${cntPID}" > "${cntDir}/pid"
 }
 
+vcm_xephyr_app() {
+  #(cd "${cntDir}" && contain . /bin/sh -l -c "/bin/xinit \"${1}\" -- :1")
+  #(cd "${cntDir}" && contain . /bin/sh -l -c "${1}")
+
+  cntCmd="${1:-st}"
+
+  if ! pgrep 'Xephyr' > /dev/null; then
+    printf '[%s] Start xephyr first! ...\n' "$(date +'%X')"
+    exit 1
+  fi
+
+  (
+    cd "${cntDir}"
+
+    if ! grep -qs "tmp/.X11-unix/X${scrnCnt}" /proc/mounts; then
+      printf '[%s] Binding host :%s to cnt :%s ...\n' "$(date +'%X')" "${scrnHst}" "${scrnCnt}"
+      mkdir -p "tmp/.X11-unix"
+      touch "tmp/.X11-unix/X${scrnCnt}"
+      mount --bind "/tmp/.X11-unix/X${scrnHst}" "tmp/.X11-unix/X${scrnCnt}"
+    fi
+
+    printf '[%s] Running command "%s" inside container ...\n' "$(date +'%X')" "${cntCmd}"
+    # https://bbs.archlinux.org/viewtopic.php?id=187234
+    contain ${cntOpts} . /bin/sh -c "export DISPLAY=:0; export QT_X11_NO_MITSHM=1; export HOME='/tmp'; ${cntCmd}"
+
+    printf '[%s] Cleaning up ...\n' "$(date +'%X')"
+    if grep -qs "tmp/.X11-unix/X${scrnCnt}" /proc/mounts; then
+      umount "tmp/.X11-unix/X${scrnCnt}"
+      rm -rf "tmp/.X11-unix"
+    fi
+  )
+}
+
+vcm_xephyr_start() {
+  if ! pgrep 'Xephyr' > /dev/null; then
+    printf '[%s] Starting xephyr on DISPLAY :%s ...\n' "$(date +'%X')" "${scrnHst}"
+    Xephyr ${xephOpts} ":${scrnHst}" &
+    sleep 0.01
+  else
+    printf '[%s] Xephyr is already running ...\n' "$(date +'%X')"
+  fi
+}
+
+vcm_xephyr_stop() {
+  if pgrep 'Xephyr' > /dev/null; then
+    printf '[%s] Stopping xephyr on DISPLAY :%s ...\n' "$(date +'%X')" "${scrnHst}"
+    kill $(pgrep 'Xephyr')
+  else
+    printf '[%s] Start Xephyr first ...\n' "$(date +'%X')"
+  fi
+}
+
 vcm_stop() {
   printf '[%s] Stopping container %s ...\n' "$(date +'%X')" "${cntName}"
   screen -X -S "cnt-${cntName}" quit
 }
 
 vcm_uninstall() {
-  xbps-remove -r "${cntDir}" -R ${@} | sed 's|^Removing|Removing (cnt)|g'
+  printf '[%s] Running remove ...\n' "$(date +'%X')"
+  xbps-remove -r "${cntDir}" -R ${@} #| sed -e 's/^/[cnt] /'
 }
 
 test $# -eq 0 && vcm_help
 act="${1}"; shift
 
-test -z "${cntName}" && test $(dirname "${PWD}") = '/data/vrt/cnt' && cntName=$(basename "${PWD}")
+test -z "${cntName}" && test $(dirname "${PWD}") = '/data/vrt/cnt/pub' && cntName=$(basename "${PWD}")
 
 if test -z "${cntName}" && test $# -gt 0; then
   cntName="${1}"
   shift
 fi
 
-test -z "${cntDir}" && cntDir="/data/vrt/cnt/${cntName}"
+test ! -z "${cntName}" && test -z "${cntDir}" && cntDir="/data/vrt/cnt/pub/${cntName}"
 
 if test ! -d "${cntDir}" && test "${act}" != 'c' && test "${act}" != 'l'; then
   printf '[%s] Container %s does not exist!\n' "$(date +'%X')" "${cntName}"
@@ -170,14 +256,31 @@ if test ! -d "${cntDir}" && test "${act}" != 'c' && test "${act}" != 'l'; then
 fi
 
 test -z "${cntPkgs}" && cntPkgs="${parentDir}/conf/cnt.pkgs"
+test -z "${cntFiles}" && cntFiles="${parentDir}/conf/cnt.files"
+
+scrnH="1030"
+scrnW="1680"
+scrnHst="1" # Host screen number
+scrnCnt="0" # Container screen number
+xephOpts=" -br -ac -noreset -resizeable -screen ${screenW}:${scrnH}"
 
 case "${act}" in
   a) vcm_attach ${@};;
+  b) vcm_backup ${@};;
   c) vcm_create ${@};;
   d) vcm_destroy ${@};;
   i) vcm_install ${@};;
   l) vcm_list ${@};;
+  #p) vcm_update ${@};;
+  p) vcm_pkg ${@};;
+  q) vcm_query ${@};;
   r) vcm_run ${@};;
   s) vcm_stop ${@};;
   u) vcm_uninstall ${@};;
+  xa) vcm_xephyr_app ${@};;
+  xs) vcm_xephyr_start ${@};;
+  xt) vcm_xephyr_stop ${@};;
 esac
+
+# Todo: Disable buffering
+# stdbuf -i0 -o0 -e0 

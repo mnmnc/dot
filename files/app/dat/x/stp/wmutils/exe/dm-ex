@@ -1,0 +1,8 @@
+#!/bin/sh
+
+scriptDir=$(dirname `realpath -P "$0"`)
+scriptName=$(basename $0)
+
+prg=$(/bin/bash -c 'compgen -cs | sort -u')
+
+echo "${prg}" | "${scriptDir}/xdm" "${@}" | "${SHELL}" 2>/dev/stdout >/dev/null | tee -a ~/app/log/dmenu/dm-ex.log

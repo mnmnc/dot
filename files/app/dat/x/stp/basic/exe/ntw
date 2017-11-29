@@ -45,7 +45,7 @@ while true; do
 done > "${NOTIFY_FIFO}" &
 
 while true; do
-  printf 'IC|%s\n' $(wget -q --spider "https://github.com" && printf '1' || printf '0')
+  printf 'IC|%s\n' $(getent hosts google.com | cut -d ' ' -f1 | wc -l)
   sleep 5
 done > "${NOTIFY_FIFO}" &
 
@@ -69,10 +69,10 @@ while true; do
   sleep 5.
 done > "${NOTIFY_FIFO}" &
 
-while true; do
-  printf 'MB|%s\n' $(acpi -b | grep 'Battery 0' | grep -o '[0-9]*%' | tr -d '%')
-  sleep 60.
-done > "${NOTIFY_FIFO}" &
+#while true; do
+#  printf 'MB|%s\n' $(acpi -b | grep 'Battery 0' | grep -o '[0-9]*%' | tr -d '%')
+#  sleep 60.
+#done > "${NOTIFY_FIFO}" &
 
 while true; do
   last="${cur}"

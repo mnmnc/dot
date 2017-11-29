@@ -1,0 +1,22 @@
+#!/bin/sh
+
+blk="${1:-}"
+
+colors=$(sed -re '/^!/d; /^$/d; /^#/d; s/(\*color)([0-9]):/\10\2:/g;' "${HOME}/.Xresources" | grep 'color[01][0-9]:' | sort | sed  's/^.*: *//g')
+
+#echo -e "\e[1;37m 
+# Black    Red      Green    Yellow   Blue     Magenta   Cyan    White   
+# ──────────────────────────────────────────────────────────────────────\e[0m"
+str=''
+for i in $(seq 0 7); do
+  num=$((30 +$i))
+  str="${str}\e[${num}m ${blk} \e[0m"
+done
+str="${str}\n"
+for i in 8 9 10 11 12 13 14 15; do
+  num=$((22 +$i))
+  str="${str}\e[1;${num}m ${blk} \e[0m"
+done
+str="${str}\n"
+
+printf "${str}"

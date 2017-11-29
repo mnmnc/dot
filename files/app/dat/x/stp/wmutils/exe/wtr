@@ -1,0 +1,20 @@
+#!/bin/sh
+
+ip=$(curl -s 'http://whatismyip.akamai.com')
+geo=$(curl -s "http://freegeoip.net/json/${ip}")
+lat=$(printf '%s' "${geo}" | grep -o '"latitude":[0-9.]*' | grep -o '[0-9.]*')
+lng=$(printf '%s' "${geo}" | grep -o '"longitude":[0-9.]*' | grep -o '[0-9.]*')
+data=$(curl -s "http://api.openweathermap.org/data/2.5/weather?lon=${lng}&lat=${lat}&appid=${OPENWEATHERMAP_API_KEY}&units=metric")
+weather=$(printf '%s' "${data}" | grep -w -o -E '(Clear|Fog|Clouds|Mist|Rain|Snow|Storm|Thunderstorm)')
+temp=$(printf '%s' "${data}" | grep -o -E '"temp":[0-9.]*' | grep -o -E '[0-9.]*' | cut -d '.' -f 1)
+
+wtIcon=''
+case "${weather}" in
+  Clear) wtIcon="";;
+  Fog|Mist) wtIcon="";;
+  Clouds) wtIcon="";;
+  Rain) wtIcon="";;
+  Snow) wtIcon="";;
+  Thunderstorm|Storm) wtIcon="";;
+esac
+printf '%s %s°C\n' "${wtIcon}" "${temp}"

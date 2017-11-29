@@ -1,0 +1,130 @@
+#!/bin/sh
+
+scriptDir=$(dirname `realpath -P "$0"`)
+scriptName=$(basename $0)
+
+test "$#" -gt 0 || exit 1
+
+act="${1}"; shift
+stpDir="${HOME}/app/dat/x/stp"
+usrRun="${HOME}/exe/run"
+
+thmName=$(cat "${THM_NAME}")
+stpName=$(cat "${STP_NAME}")
+
+vstp_check(){
+  t=0
+  #test "${1}" =~ '^[0-9]+$' && t="${1}" && shift
+
+  prog="${1}"; shift
+  sn=$(basename "${prog}")
+
+  # no program specified
+  test -z "${prog}" && exit 1
+
+  # program already running
+  test $(pgrep "${sn}") && exit 0
+
+  # delay program execution
+  test "${t}" -ne 0 && sleep "${t}"
+
+  ${prog} ${@}
+
+  while :; do
+    sleep 1s
+    test $(pgrep -f "${prog}") && continue
+    ${prog} ${@}
+    notify-send -u 'low' "Restarted \"${sn}\"."
+  done
+}
+
+vstp_wait(){
+  t=0
+  #test "${1}" =~ '^[0-9]+$' && t="${1}" && shift
+
+  prog="${1}"; shift
+  sn=$(basename "${prog}")
+
+  # no program specified
+  test -z "${prog}" && exit 1
+
+  # program already running
+  test $(pgrep "${sn}") && exit 0
+
+  # delay program execution
+  test "${t}" -ne 0 && sleep "${t}"
+
+  while :; do
+    ${prog} ${@}
+    notify-send -u 'low' "Restarted \"${sn}\"."
+    sleep 1s;
+  done
+}
+
+vstp_loop(){
+  while :; do
+    sleep 10
+  done
+}
+vstp_login(){
+  if test -z "${stpName}" || test -z "${thmName}"; then
+    printf '[%s] Error: Please pass theme & setup ...\n' "$(date +'%X')" # | tee ~/.xinit.log
+    exit 1
+  fi
+
+  printf '[%s] Starting X login ...\n' "$(date +'%X')" # | tee ~/.xinit.log
+  export DRY_RUN="${DRY_RUN:-n}"
+  export vstp_check vstp_wait
+
+  test "${DRY_RUN}" = 'y' && printf '[%s] Detected dry-run ...\n' "$(date +'%X')" # | tee -a ~/.xinit.log
+
+  # load config
+  if test -f "${stpDir}/${stpName}/conf"; then
+    printf '[%s] Reading setup config ...\n' "$(date +'%X')" # | tee -a ~/.xinit.log
+    test "${DRY_RUN}" = 'n' && source "${stpDir}/${stpName}/conf"
+  fi
+
+  # init setup
+  if test -f "${stpDir}/${stpName}/init"; then
+    printf '[%s] Starting setup init ...\n' "$(date +'%X')" # | tee -a ~/.xinit.log
+    test "${DRY_RUN}" = 'n' && source "${stpDir}/${stpName}/init"
+  fi
+  
+  # load theme
+  printf '[%s] Loading theme ...\n' "$(date +'%X')"
+  vthm l "${thmName}"
+
+  export stp stpDir
+  printf '[%s] Starting setup programs ...\n' "$(date +'%X')" # | tee -a ~/.xinit.log
+  for p in "${stpDir}/${stpName}/run/"* ; do
+    if test -x "${p}"; then
+      bn=$(basename "${p}" | cut -d '_' -f 2)
+      printf '[%s] Setting up %s ...\n' "$(date +'%X')" "${bn}" # | tee -a ~/.xinit.log
+      test "${DRY_RUN}" = 'n' && "${p}"
+    fi
+  done
+  unset p
+
+  printf '[%s] Starting user programs ...\n' "$(date +'%X')" # | tee -a ~/.xinit.log
+  for p in "${usrRun}/"* ; do
+    if test -x "${p}"; then
+      bn=$(basename "${p}" | cut -d '_' -f 2)
+      printf '[%s] Starting %s ...\n' "$(date +'%X')" "${bn}" # | tee -a ~/.xinit.log
+      test "${DRY_RUN}" = 'n' && "${p}"
+    fi
+  done
+  unset p
+
+  if test -e "${HOME}/.Xresources"; then
+    printf '[%s] Merging X resources ...\n' "$(date +'%X')" # | tee -a ~/.xinit.log
+    test "${DRY_RUN}" = 'n' && xrdb -merge "${HOME}/.Xresources"
+  fi
+  
+  printf '[%s] Running X loop ...\n' "$(date +'%X')" # | tee -a ~/.xinit.log
+  test "${DRY_RUN}" = 'n' && vstp_loop
+}
+
+case "${act}" in
+  a) vstp_apply ${@};;
+  x) vstp_login ${@};;
+esac

@@ -8,9 +8,16 @@ xbps-install opensmtpd mailx spampd
 
 # https://www.opensmtpd.org/faq/example1.html
 # https://www.opensmtpd.org/faq/config.html
-useradd -m -c "Virtual Mail" -d /var/vmail -s /sbin/nologin vmail
+useradd -m -c "Virtual Mail - Public" -d /var/mail/pub -s /sbin/nologin vmail-pub
+passwd vmail-pub
+
+useradd -m -c "Virtual Mail - Private" -d /var/mail/prv -s /sbin/nologin vmail-prv
+passwd vmail-prv
+
+useradd -m -c "Virtual Mail - Direct" -d /var/mail/dct -s /sbin/nologin vmail-dct
+passwd vmail-dct
+
 chmod 600 /var/lib/acme/live/mail.<domain>/*
-passwd vmail
 
 #mkdir -m 700 /etc/smtpd/tls; cd /etc/smtpd/tls
 #openssl req -new -x509 -nodes -newkey rsa:4096 -keyout smtpd.key -out smtpd.crt -days 1095
@@ -22,6 +29,7 @@ cat >/etc/smtpd/smtpd.conf <<EOF
 pki mail.<domain> key "/var/lib/acme/live/mail.<domain>/privkey"
 pki mail.<domain> certificate "/var/lib/acme/live/mail.<domain>/cert"
 
+table aliases "/etc/smtpd/aliases"
 table creds "/etc/smtpd/creds"
 table vdoms "/etc/smtpd/vdoms"
 table vusers "/etc/smtpd/vusers"
@@ -31,7 +39,7 @@ listen on lo port 10026 tag Filtered
 listen on eth0 port 25 hostname mail.<domain> tls pki mail.<domain>
 listen on eth0 port 587 hostname mail.<domain> tls-require pki mail.<domain> auth mask-source
 
-accept tagged Filtered for domain <vdoms> virtual <vusers> deliver to maildir "~/mails"
+accept tagged Filtered for domain <vdoms> alias <aliases> deliver to maildir "~/mails"
 
 accept from any for domain <vdoms> relay via "smtp://127.0.0.1:10025"
 
@@ -53,7 +61,8 @@ cat >/etc/smtpd/aliases <<EOF
 abuse: mail
 postmaster: mail
 contact: mail
-mail: vmail
+
+mail: vmail-pub
 EOF
 
 # https://wiki.archlinux.org/index.php/OpenSMTPD
