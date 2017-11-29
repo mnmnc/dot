@@ -13,6 +13,7 @@ mkdir -p "${DSK_TMP}"
 printf '%s' "${SETUP_NAME}" > "${STP_NAME}"
 printf '%s' "${THEME_NAME}" > "${THM_NAME}"
 
+rm "${HOME}/app/dat/x/stp/current"
 ln -s "${HOME}/app/dat/x/stp/${SETUP_NAME}" "${HOME}/app/dat/x/stp/current"
 
 printf '' > ~/.xinit.log
