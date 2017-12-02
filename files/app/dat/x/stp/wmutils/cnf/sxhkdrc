@@ -58,8 +58,12 @@ super + ctrl + {1-9,0}
   grpw {1-9,0} tog $(pfw)
 super + {1-9,0}
   grpw {1-9,0} tog
-super + {1-9,0} + Delete
-  grpw {1-9,0} des
+
+#super + {1-9,0} + Delete
+#  grpw {1-9,0} des
+
+super + shift + {1-9,0}
+  grpw {1-9,0} cur
 
 # modify window stacking order lower/higher/bottom/top
 super + alt + {Up,Down}

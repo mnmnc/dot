@@ -1,5 +1,4 @@
 ! Base16 Gruvbox dark, soft
-! Scheme: Dawid Kurek (dawikur@gmail.com), morhetz (https://github.com/morhetz/gruvbox)
 
 #define base00 #32302f
 #define base01 #3c3836
@@ -19,11 +18,7 @@
 #define base0F #d65d0e
 
 *foreground:   base05
-#ifdef background_opacity
-*background:   [background_opacity]base00
-#else
 *background:   base00
-#endif
 *cursorColor:  base05
 
 *color0:       base00

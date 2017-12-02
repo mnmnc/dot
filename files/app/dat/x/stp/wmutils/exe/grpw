@@ -61,6 +61,11 @@ if test $# -eq 0; then
       rm "${grpFile}" "${grpStat}" "${grpLast}"
       exit
       ;;
+    cur)
+      printf '%s\n' $(lsw) > "${grpFile}"
+      printf 'visible' > "${grpStat}"
+      exit
+      ;;
   esac
 else
   while test $# -gt 0; do
@@ -81,3 +86,5 @@ else
     esac
   done
 fi
+
+exit

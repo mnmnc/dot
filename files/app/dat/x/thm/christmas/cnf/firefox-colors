@@ -1,0 +1,48 @@
+@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
+
+/* Begin Variables */
+:root {
+  --base00: #32302f;
+  --base01: #3c3836;
+  --base02: #504945;
+  --base03: #665c54;
+  --base04: #bdae93;
+  --base05: #d5c4a1;
+  --base06: #ebdbb2;
+  --base07: #fbf1c7;
+  --base08: #fb4934;
+  --base09: #fe8019;
+  --base0A: #fabd2f;
+  --base0B: #b8bb26;
+  --base0C: #8ec07c;
+  --base0D: #83a598;
+  --base0E: #d3869b;
+  --base0F: #d65d0e;
+
+  --fontName: Ubuntu Mono;
+  --fontSize: 12px;
+}
+
+@-moz-document url(chrome://browser/content/browser.xul) {
+  #main-window .tabbrowser-tab {
+    font: var(--fontSize) var(--fontName);
+  }
+
+  /* normal tab */
+  #main-window .tabbrowser-tab {
+    background: var(--base01) !important;
+    color: var(--base07) !important;
+  }
+
+  /* tab hover */
+  #main-window .tabbrowser-tab:hover {
+    background: var(--base00) !important;
+    color: var(--base0B) !important;
+  }
+
+  /* selected tab */
+  #main-window .tabbrowser-tab[selected] {
+    background: var(--base02) !important;
+    color: var(--base06) !important;
+  }
+}

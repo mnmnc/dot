@@ -15,15 +15,15 @@ vthm_load() {
   test -d "${thmDir}/${thm}" || exit 1
   printf '[%s] Loading theme %s...\n' "$(date +'%X')" "${thm}"
 
-  test -L "${HOME}/app/cnf/bash/colors" && rm "${HOME}/app/cnf/bash/colors"
-  test -L "${HOME}/app/cnf/x/Xcolors" && rm "${HOME}/app/cnf/x/Xcolors"
-  test -L "${HOME}/app/cnf/vim/colors/base" && rm "${HOME}/app/cnf/vim/colors/base.vim"
+  #test -L "${HOME}/app/cnf/bash/colors" && rm "${HOME}/app/cnf/bash/colors"
+  #test -L "${HOME}/app/cnf/x/Xcolors" && rm "${HOME}/app/cnf/x/Xcolors"
+  #test -L "${HOME}/app/cnf/vim/colors/term.vim" && rm "${HOME}/app/cnf/vim/colors/term.vim"
 
-  printf '[%s] Setting symbolic links...\n' "$(date +'%X')"
+  #printf '[%s] Setting symbolic links...\n' "$(date +'%X')"
 
-  ln -s "${thmDir}/${thm}/cnf/shell-colors" "${HOME}/app/cnf/bash/colors"
-  ln -s "${thmDir}/${thm}/cnf/x-colors" "${HOME}/app/cnf/x/Xcolors"
-  ln -s "${thmDir}/${thm}/cnf/vim-colors" "${HOME}/app/cnf/vim/colors/base"
+  #ln -s "${thmDir}/${thm}/cnf/shell-colors" "${HOME}/app/cnf/bash/colors"
+  #ln -s "${thmDir}/${thm}/cnf/x-colors" "${HOME}/app/cnf/x/Xcolors"
+  #ln -s "${thmDir}/${thm}/cnf/vim-colors" "${HOME}/app/cnf/vim/colors/term.vim"
 
   printf '[%s] Setting background...\n' "$(date +'%X')"
   eval "$(x2v)"
@@ -36,6 +36,8 @@ vthm_load() {
 
   source "${HOME}/app/cnf/bash/colors"
   printf '%s' "${thm}" > "${THM_NAME}"
+  test -L "${thmDir}/current" && rm "${thmDir}/current"
+  ln -s "${thmDir}/${thm}" "${thmDir}/current"
 }
 
 # generate a theme

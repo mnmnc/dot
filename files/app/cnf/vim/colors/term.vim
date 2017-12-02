@@ -1,1 +1,1 @@
-/home/anon/app/dat/x/thm/cookies/cnf/vim-colors
+/home/anon/app/dat/x/thm/current/cnf/vim-colors

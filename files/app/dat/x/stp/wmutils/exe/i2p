@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+
+while test $# -gt 0; do
+  case "$1" in
+    -s|--server) II_SERVER="${2}"; shift 2;;
+    -c|--channel) II_CHANNEL="${2}"; shift 2;;
+    -f|--friend) II_FRIEND="${2}"; shift 2;;
+    -h|--history) II_HISTORY="${2}"; shift 2;;
+    -n|--nick) II_NICK="${2}"; shift 2;;
+    -p|--port) II_PORT="${2}"; shift 2;;
+    -r|--reconnect) II_RECONNECT="${2}"; shift 2;;
+    -pw|--password) II_PASS="${2}"; shift 2;;
+    -u|-current) II_CURCHAN="${2}"; shift 2;;
+    *) printf 'Unknown param: %s' "${1}"; shift 2;;
+  esac
+done
+II_DIR="${II_DIR:-$HOME/app/dat/irc}"
+II_SERVER="${II_SERVER:-irc.freenode.net}"
+#II_CHANNEL="${II_CHANNEL}"
+II_CURCHAN="${II_DIR}/${II_SERVER}/current"
+II_PORT="${II_PORT:-6667}"
+II_PID="${II_DIR}/${II_SERVER}/pid"
+II_RECONNECT="${II_RECONNECT:-1}"
+#II_HISTORY="${II_HISTORY:-50}"
+II_NICK="${II_NICK:-$USER}"
+#II_PASS="${II_PASS}"
+
+export II_DIR II_SERVER II_CHANNEL II_CURCHAN II_FRIEND II_NICK II_PASS II_PORT II_PID
+export II_RECONNECT II_HISTORY

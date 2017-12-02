@@ -7,25 +7,23 @@ while ! xdo id -a 'sp' > /dev/null; do
   sleep 0.001
 done
 
-WIN=$(xdo id -a 'sp')
+winID=$(xdo id -a 'sp')
 ROOT=$(lsw -r)
 SW=$(wattr w $ROOT)
 SH=$(wattr h $ROOT)
-wtp 0 0 "${SW}" 20 "${WIN}"
-chwb -s 0 "${WIN}"
-ignw -s "${WIN}"
-
-exit
+wtp 0 0 "${SW}" 20 "${winID}"
+chwb -s 0 "${winID}"
+ignw -s "${winID}"
 
 while kill -0 "${nPID}"; do
   sleep 1
   if test -s "${NOTIFY_CACHE}"; then
-    wattr m "${WIN}" || (
-      mapw -m "${WIN}" #&& bspc config top_padding 20
+    wattr m "${winID}" || (
+      mapw -m "${winID}" #&& bspc config top_padding 20
     )
   else
-    wattr m "${WIN}" && (
-      mapw -u "${WIN}" #&& bspc config top_padding 0
+    wattr m "${winID}" && (
+      mapw -u "${winID}" #&& bspc config top_padding 0
     )
   fi
 done

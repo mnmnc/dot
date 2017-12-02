@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+# ii-multichannel
+
+. i2p
+
+II_CURCHAN="${II_DIR}/${II_SERVER}/current"
+
+while :; do
+  if test -L "${II_CURCHAN}"; then
+    chn=$(basename $(realpath "${II_CURCHAN}") | tr -d '#')
+    II_CHANNEL="${chn}" i2c
+  else
+    sleep 1
+  fi
+  clear
+done

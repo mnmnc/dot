@@ -1,9 +1,21 @@
 #!/usr/bin/env sh
 # ii-editor
 
+. i2p
+
 while :; do
   clear
-  printf ' \033[0;33mSay\033[0m: '
+  printf ' [\033[0;33m#%s\033[0m]: ' $(basename $(realpath "${II_CURCHAN}") | tr -d '#')
   read line
-  printf '%s\n' "${line}" | i2w "${@}" || exit 1
+  if printf '%s' "${line}" | grep -q -e '^!go'; then
+    chn=$(printf '%s' "${line}" | awk '{print $2}') 
+    test -L "${II_CURCHAN}" && rm "${II_CURCHAN}"
+    pkill -f i2c
+    ln -s "${II_DIR}/${II_SERVER}/#${chn}" "${II_CURCHAN}"
+  #elif printf '%s' "${line}" | grep -q -e '^/me'; then
+  #  line=$(printf '%s' "${line}" | awk '{print $2}')
+  #  printf '^AACTION %s\n' "${line}" | i2w || exit 1 
+  else
+    printf '%s\n' "${line}" | i2w || exit 1
+  fi
 done

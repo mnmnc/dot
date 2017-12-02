@@ -5,7 +5,7 @@ sleep 0.05
 test -p "${NOTIFY_FIFO}" || exit 1
 
 while true; do
-  printf 'BT|%s\n' $(acpi -b | grep 'Battery 1' | grep -o '[0-9]*%' | tr -d '%')
+  printf 'BT|%s\n' $(grep 'POWER_SUPPLY_CAPACITY=' /sys/class/power_supply/BAT0/uevent | awk -F '=' '{print $2}')
   sleep 60.
 done > "${NOTIFY_FIFO}" &
 

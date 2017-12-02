@@ -1,6 +1,6 @@
 #!/bin/sh
 
-xbps-install gnupg mutt
+xbps-install gnupg mutt offlineimap mblaze
 
 gpg --gen-key
 

@@ -1,0 +1,42 @@
+! Nord Theme
+
+#define base00 #2E3440
+#define base01 #3B4252
+#define base02 #434C5E
+#define base03 #4C566A
+#define base04 #D8DEE9
+#define base05 #E5E9F0
+#define base06 #ECEFF4
+#define base07 #8FBCBB
+#define base08 #88C0D0
+#define base09 #81A1C1
+#define base0A #5E81AC
+#define base0B #BF616A
+#define base0C #D08770
+#define base0D #EBCB8B
+#define base0E #A3BE8C
+#define base0F #B48EAD
+
+*foreground:   base04
+*background:   base00
+*cursorColor:  base04
+*fading:       35
+*fadeColor:    base03
+
+*color0:       base01
+*color1:       base0B
+*color2:       base0E
+*color3:       base0D
+*color4:       base09
+*color5:       base0F
+*color6:       base08
+*color7:       base05
+
+*color8:       base03
+*color9:       base0B
+*color10:      base0E
+*color11:      base0D
+*color12:      base09
+*color13:      base0F
+*color14:      base07
+*color15:      base06

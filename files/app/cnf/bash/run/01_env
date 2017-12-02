@@ -6,8 +6,8 @@ export LANG=$(grep '^LANG' /etc/locale.conf | tr -d '"' | cut -d '=' -f 2)
 # read from /etc/rc.conf
 export HOSTNAME=$(cat /etc/hostname)
 export KEYMAP=$(grep '^KEYMAP' /etc/rc.conf | tr -d '"' | cut -d '=' -f 2)
-export TIMEZONE=$(grep '^TIMEZONE' /etc/rc.conf | tr -d '"' | cut -d '=' -f 2)
-#export TZ="${TIMEZONE}"
+#export TIMEZONE=$(grep '^TIMEZONE' /etc/rc.conf | tr -d '"' | cut -d '=' -f 2)
+export TZ="UTC"
 export HARDWARECLOCK=$(grep '^HARDWARECLOCK' /etc/rc.conf | tr -d '"' | cut -d '=' -f 2)
 
 export http_proxy=$(grep '^PROXY' /etc/rc.conf | tr -d '"' | cut -d '=' -f 2)
