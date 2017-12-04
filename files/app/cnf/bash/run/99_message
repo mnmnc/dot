@@ -70,11 +70,14 @@ export -f shell_prompt_handle
 export PROMPT_COMMAND='shell_prompt_handle'
 
 prompt_message_handle() {
+  test -f ~/app/dat/x/thm/current/info || return 
+  
   clear
 
-  printf '\n   Welcome to\n\e[0;33m'
-  cat ~/app/cnf/x/logo
-  printf '\n\e[0m          %s @ %s - %s\n' "${USER}" "${HOSTNAME}" "$(date +'%x %X')"
+  #printf '\n   Welcome to\n\e[0;33m'
+  #cat ~/app/cnf/x/logo
+  #printf '\n\e[0m          %s @ %s - %s\n' "${USER}" "${HOSTNAME}" "$(date +'%x %X')"
+  ~/app/dat/x/thm/current/info
 }
 
 export -f prompt_message_handle

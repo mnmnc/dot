@@ -362,10 +362,10 @@ while :; do
           status=$(amixer get Master | grep -o -w 'o[nf]*')
           if test "${status}" = 'off' || test "${val}" -eq 0; then
             vlStr="%{F${base09}}%{F-} "
-            notify-send -t 500 -i "mute" -u 'low' " %I"
+            notify-send -t 500 -u 'low' -i "mute" " %I"
           else
             vlStr=""
-            notify-send -t 500 -i "${val}%" -u 'low' " %I"
+            notify-send -t 500 -u 'low' -i "${val}%" " %I"
           fi
           lastMsg=" ${val}%"
           ;;

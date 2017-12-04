@@ -27,7 +27,8 @@ while :; do
     done
 
     ${cmd}
-    xrf
+    #xrf
+    setroot -z "${HOME}/app/dat/x/thm/current/wall/"*
     printf 'DP|%s\n' "${dsk}" > "${NOTIFY_FIFO}"
 
     sleep 4

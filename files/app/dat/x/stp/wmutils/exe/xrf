@@ -6,13 +6,21 @@ eval "$(x2v)"
 #~/app/cnf/bspwm/bspwmrc
 
 # refresh bar
-pgrep ntw >/dev/null && kill -8 $(pgrep ntw)
-pgrep ntb >/dev/null && kill -8 $(pgrep ntb)
-pgrep ntr >/dev/null && kill -8 $(pgrep ntr)
-pgrep lemonbar >/dev/null && kill -8 $(pgrep lemonbar)
+pgrep ntw >/dev/null && pkill ntw
+pgrep ntb >/dev/null && pkill ntb
+pgrep ntr >/dev/null && pkill ntr
+pgrep lemonbar >/dev/null && pkill lemonbar
+
+# refresh dunst
+pgrep xdn >/dev/null && pkill xdn
+pgrep dunst >/dev/null && pkill dunst
+
+# refresh compton
+pgrep compton >/dev/null && pkill compton
 
 ntb &
 ntw &
+xdn -conf "${HOME}/app/cnf/dunst/dunstrc" &
+compton --config "${HOME}/app/cnf/compton/compton.conf" &
 
-thm=$(cat "${THM_NAME}")
-setroot -z "${HOME}/app/dat/x/thm/${thm}/wall"
+setroot -z "${HOME}/app/dat/x/thm/current/wall/"*

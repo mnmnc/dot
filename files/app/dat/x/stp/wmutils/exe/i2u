@@ -93,9 +93,9 @@ case "${act}" in
       if kill -0 "${pid}"; then
         printf '[%s] Disconnecting\n' "$(date +'%X')"
         printf '/quit\n' > "${II_DIR}/${II_SERVER}/in"
-        sleep 1.
-        printf '[%s] Kill active ii as "%s"...\n' "$(date +'%X')" "${pid}"
-        kill "${pid}"
+        #sleep 1.
+        #printf '[%s] Kill active ii as "%s"...\n' "$(date +'%X')" "${pid}"
+        #kill "${pid}"
         printf '[%s] Finished\n' "$(date +'%X')"
       fi
       rm "${II_PID}"

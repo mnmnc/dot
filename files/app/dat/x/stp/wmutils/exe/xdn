@@ -2,4 +2,4 @@
 
 # Add xft font from Xresources
 eval "$(x2v)"
-dunst -fn "${FONT_NAME} 10" -lf "${base0B}" -nf "${base0A}" -cf "${base09}" -lb "${base01}" -nb "${base01}" -cb "${base01}" -sep_color "${base02}" -frame_color "${base02}" "${@}"
+dunst -fn "${FONT_NAME} ${FONT_SIZE}" -lf "${base0B}" -nf "${base0A}" -cf "${base09}" -lb "${base01}" -nb "${base01}" -cb "${base01}" -sep_color "${base02}" -frame_color "${base02}" "${@}"

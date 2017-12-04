@@ -1,7 +1,5 @@
 #!/bin/sh
 
-sleep 0.05
-
 test -p "${NOTIFY_FIFO}" || exit 1
 
 while true; do

@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+
+#cpu=$(grep 'model name' /proc/cpuinfo | head -n 1 | awk -F ':' '{print $2}' | xargs)
+cpu='Intel i7-7500U CPU @ 2.70GHz'
+#gpu=$(lspci | grep 'Display' | awk -F '.' '{print $3}' | xargs)
+gpu='AMD Radeon R7 M445'
+#ram=$(free -m | awk 'NR==2{printf "%s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }')
+ram=$(free -m | awk 'NR==2{printf "%s/%s MB\n", $3,$2 }')
+rom=$(df -h | awk '$NF=="/data"{printf "%d/%d GB\n", $3,$2}')
+
+printf '                  _
+             __/\/,\__ 
+             \_\_\_/_/
+            <__=(_)=__>
+             \_/\_\`_/
+              / /\ \             \033[0;34mOS\033[0m:\t%s
+             /_/| \ \            \033[0;34mCORE\033[0m:\t%s
+             (U)| |\ \           \033[0;34mWM\033[0m:\t%s
+            .-"-. | (U)          \033[0;34mCPU\033[0m:\t%s
+           /     \ .-"-.         \033[0;34mGPU\033[0m:\t%s
+          ;=      ;     \        \033[0;34mRAM\033[0m:\t%s
+          |=     _|=     ;       \033[0;34mROM\033[0m:\t%s
+         (_________)    _|
+          `----()-`_______)
+            |=    `--()--`
+           (_________)
+            `--()---`
+' "Void" $(uname -r) $(cat "${STP_NAME}") "${cpu}" "${gpu}" "${ram}" "${rom}" 

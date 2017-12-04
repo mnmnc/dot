@@ -1,29 +1,24 @@
 #!/bin/sh
 
-ntr | xlb -d -p -n 'sp' &
+ntr | xlb -d -p -n 'sp' -g "x${PAD_TOP}" &
 nPID=$!
+
+#xdo id -p "${nPID}"
 
 while ! xdo id -a 'sp' > /dev/null; do
   sleep 0.001
 done
 
 winID=$(xdo id -a 'sp')
-ROOT=$(lsw -r)
-SW=$(wattr w $ROOT)
-SH=$(wattr h $ROOT)
-wtp 0 0 "${SW}" 20 "${winID}"
-chwb -s 0 "${winID}"
 ignw -s "${winID}"
+#ROOT=$(lsw -r)
+#SW=$(wattr w $ROOT)
+#SH=$(wattr h $ROOT)
+#wtp 0 0 "${SW}" 25 "${winID}"
+#chwb -s 0 "${winID}"
 
 while kill -0 "${nPID}"; do
   sleep 1
-  if test -s "${NOTIFY_CACHE}"; then
-    wattr m "${winID}" || (
-      mapw -m "${winID}" #&& bspc config top_padding 20
-    )
-  else
-    wattr m "${winID}" && (
-      mapw -u "${winID}" #&& bspc config top_padding 0
-    )
-  fi
+  test -s "${NOTIFY_CACHE}" && ! wattr m "${winID}" && mapw -m "${winID}"
+  test ! -s "${NOTIFY_CACHE}" && wattr m "${winID}" && mapw -u "${winID}"
 done

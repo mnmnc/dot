@@ -1,0 +1,12 @@
+Xft.autohint:     0
+Xft.lcdfilter:    lcddefault
+! Xft.hintstyle:  hintfull
+Xft.hintstyle:    hintslight
+Xft.hinting:      1
+Xft.antialias:    1
+Xft.rgba:         rgb
+
+*.font:             xft:Source Code Variable:size=12,style=regular
+*.boldFont:         xft:Source Code Variable:size=12,style=bold
+*.italicFont:       xft:Source Code Variable:size=12,style=italic
+*.boldItalicFont:   xft:Source Code Variable:size=12,style=bolditalic

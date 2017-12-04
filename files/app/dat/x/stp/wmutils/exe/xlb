@@ -2,4 +2,4 @@
 
 # Add xft font from Xresources
 eval "$(x2v)"
-lemonbar -f "${FONT_NAME}" -f "FontAwesome" -F "${base05}" -B "${base01}" "${@}"
+lemonbar -f "${FONT_NAME}-${FONT_SIZE}" -f "FontAwesome-${FONT_SIZE}" -F "${base05}" -B "${base01}" "${@}"

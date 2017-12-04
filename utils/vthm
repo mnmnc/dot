@@ -14,6 +14,8 @@ vthm_load() {
 
   test -d "${thmDir}/${thm}" || exit 1
   printf '[%s] Loading theme %s...\n' "$(date +'%X')" "${thm}"
+  test -L "${thmDir}/current" && rm "${thmDir}/current"
+  ln -s "${thmDir}/${thm}" "${thmDir}/current"
 
   #test -L "${HOME}/app/cnf/bash/colors" && rm "${HOME}/app/cnf/bash/colors"
   #test -L "${HOME}/app/cnf/x/Xcolors" && rm "${HOME}/app/cnf/x/Xcolors"
@@ -25,19 +27,22 @@ vthm_load() {
   #ln -s "${thmDir}/${thm}/cnf/x-colors" "${HOME}/app/cnf/x/Xcolors"
   #ln -s "${thmDir}/${thm}/cnf/vim-colors" "${HOME}/app/cnf/vim/colors/term.vim"
 
+  printf '[%s] Reloading font cache...\n' "$(date +'%X')"
+  fc-cache -f
+
   printf '[%s] Setting background...\n' "$(date +'%X')"
   eval "$(x2v)"
   xsetroot -solid "${base00}"
+  
+  printf '[%s] Restarting applications...\n' "$(date +'%X')"
 
-  if test -f "${thmDir}/${thm}/wall"; then
+  if test -d "${thmDir}/${thm}/wall"; then
     printf '[%s] Setting wallpaper...\n' "$(date +'%X')"
-    setroot -z "${thmDir}/${thm}/wall"
+    setroot -z "${thmDir}/${thm}/wall/"*
   fi
 
   source "${HOME}/app/cnf/bash/colors"
   printf '%s' "${thm}" > "${THM_NAME}"
-  test -L "${thmDir}/current" && rm "${thmDir}/current"
-  ln -s "${thmDir}/${thm}" "${thmDir}/current"
 }
 
 # generate a theme

@@ -15,7 +15,7 @@ if test $# -eq 1 && test "${1}" = 'cln'; then
         sed -i "0,/${winID}/d" "${grpFile}"
       fi
     done < "${WM_GROUPS}/${grp}"
-    test ! -s "${grpFile}" && rm "${grpFile}" "${grpStat}" "${grpLast}"
+    test ! -s "${grpFile}" && notify-send " ${grp}" && rm "${grpFile}" "${grpStat}" "${grpLast}"
   done
   exit
 fi
@@ -59,6 +59,7 @@ if test $# -eq 0; then
         done < "${grpFile}"
       fi
       rm "${grpFile}" "${grpStat}" "${grpLast}"
+      notify-send " ${grp}"
       exit
       ;;
     cur)
@@ -81,7 +82,7 @@ else
         ;;
       del)
         sed -i "0,/${winID}/d" "${grpFile}"
-        test ! -s "${grpFile}" && rm "${grpFile}" "${grpStat}" "${grpLast}"
+        test ! -s "${grpFile}" && notify-send " ${grp}" && rm "${grpFile}" "${grpStat}" "${grpLast}"
         ;;
     esac
   done
